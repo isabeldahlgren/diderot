@@ -196,13 +196,25 @@ function PayloadView({ cert }: { cert: Certificate }) {
 function CertificateCard({ cert }: { cert: Certificate }) {
   const [open, setOpen] = useState(false);
 
-  const issuerLabel = cert.issuer_display_name
-    ? cert.issuer_type === "self"
-      ? `${cert.issuer_display_name} (author)`
-      : `${cert.issuer_display_name} (reviewer)`
+  const issuerSuffix = cert.issuer_type === "self" ? " (author)" : " (reviewer)";
+  const issuerText = cert.issuer_display_name
+    ? `${cert.issuer_display_name}${issuerSuffix}`
     : cert.issuer_type === "self"
     ? "author"
     : "external reviewer";
+
+  const issuerNode =
+    cert.issuer_user_id && cert.issuer_display_name ? (
+      <Link
+        href={`/authors/${cert.issuer_user_id}`}
+        className="text-xs text-gray-500 hover:underline hover:text-gray-900"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {issuerText}
+      </Link>
+    ) : (
+      <span className="text-xs text-gray-500">{issuerText}</span>
+    );
 
   const date = new Date(cert.issued_at).toLocaleDateString("en-GB", {
     year: "numeric",
@@ -225,7 +237,7 @@ function CertificateCard({ cert }: { cert: Certificate }) {
               <span className="ml-1 font-mono text-[10px] opacity-70">v{cert.version}</span>
             )}
           </span>
-          <span className="text-xs text-gray-500">{issuerLabel}</span>
+          {issuerNode}
         </div>
         <div className="flex items-center gap-3 flex-shrink-0">
           <span className="text-xs text-gray-400">{date}</span>
