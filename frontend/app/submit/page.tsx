@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useRef, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { submitPaper, type AuthorType, type Paper } from "@/lib/api";
+import { submitPaper, getPaper, type AuthorType, type Paper } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { CertificateModal } from "@/app/papers/[id]/CertificateSection";
 
@@ -131,9 +131,13 @@ function AuthorRowItem({
   );
 }
 
-export default function SubmitPage() {
+function SubmitPageInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const parentId = searchParams.get("parent_id");
   const { user, token } = useAuth();
+
+  const [parentPaper, setParentPaper] = useState<Paper | null>(null);
   const [title, setTitle] = useState("");
   const [abstract, setAbstract] = useState("");
   const [subjectArea, setSubjectArea] = useState("");
@@ -147,6 +151,23 @@ export default function SubmitPage() {
   useEffect(() => {
     if (!user) router.replace("/login");
   }, [user, router]);
+
+  useEffect(() => {
+    if (!parentId) return;
+    getPaper(parentId).then((p) => {
+      setParentPaper(p);
+      setTitle(p.title);
+      setAbstract(p.abstract);
+      setSubjectArea(p.subject_area);
+      setAuthors(
+        p.authors.map((a) => ({
+          name: a.author_type === "ai" ? (a.model_version ?? a.name) : a.name,
+          author_type: a.author_type,
+          model_id: a.author_type === "ai" ? (a.model_version ?? a.name) : "",
+        }))
+      );
+    }).catch(() => {});
+  }, [parentId]);
 
   function updateAuthor(i: number, field: keyof AuthorRow, value: string) {
     setAuthors((prev) => prev.map((a, idx) => (idx === i ? { ...a, [field]: value } : a)));
@@ -181,6 +202,7 @@ export default function SubmitPage() {
         }),
         pdf,
         token,
+        parent_id: parentId ?? undefined,
       });
       setSubmittedPaper(paper);
     } catch (err) {
@@ -192,14 +214,16 @@ export default function SubmitPage() {
   if (!user) return null;
 
   if (submittedPaper) {
-    const hasHumanAuthor = submittedPaper.authors.some(
-      (a) => a.author_type === "human"
-    );
+    const hasHumanAuthor = submittedPaper.authors.some((a) => a.author_type === "human");
     return (
       <div className="max-w-2xl">
         <h1 className="text-2xl font-semibold mb-4">Paper submitted</h1>
         <p className="text-sm text-gray-500 mb-8">
-          <span className="font-medium text-gray-900">{submittedPaper.title}</span> has been submitted.
+          <span className="font-medium text-gray-900">{submittedPaper.title}</span>
+          {submittedPaper.version > 1 && (
+            <span className="ml-1 text-gray-400">(v{submittedPaper.version})</span>
+          )}{" "}
+          has been submitted.
         </p>
         <div className="flex items-center gap-4">
           <button
@@ -233,7 +257,21 @@ export default function SubmitPage() {
 
   return (
     <div className="max-w-2xl">
-      <h1 className="text-2xl font-semibold mb-8">Submit a paper</h1>
+      {parentPaper ? (
+        <div className="mb-6">
+          <h1 className="text-2xl font-semibold mb-1">Submit revised version</h1>
+          <p className="text-sm text-gray-500">
+            Revising{" "}
+            <Link href={`/papers/${parentPaper.id}`} className="underline hover:text-gray-900">
+              {parentPaper.title}
+            </Link>{" "}
+            (v{parentPaper.version} → v{parentPaper.version + 1})
+          </p>
+        </div>
+      ) : (
+        <h1 className="text-2xl font-semibold mb-8">Submit a paper</h1>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <label className="block text-sm font-medium mb-1">Title</label>
@@ -311,9 +349,17 @@ export default function SubmitPage() {
           disabled={submitting}
           className="px-6 py-2 bg-gray-900 text-white text-sm hover:bg-gray-700 disabled:opacity-50 transition-colors"
         >
-          {submitting ? "Submitting…" : "Submit paper"}
+          {submitting ? "Submitting…" : parentPaper ? `Submit v${parentPaper.version + 1}` : "Submit paper"}
         </button>
       </form>
     </div>
+  );
+}
+
+export default function SubmitPage() {
+  return (
+    <Suspense fallback={null}>
+      <SubmitPageInner />
+    </Suspense>
   );
 }

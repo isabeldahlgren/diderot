@@ -1,9 +1,10 @@
 import type { ReactNode } from "react";
-import { getPaper } from "@/lib/api";
+import { getPaper, getPaperVersions } from "@/lib/api";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import CertificateSection from "./CertificateSection";
 import CiteButton from "./CiteButton";
+import VersionSection from "./VersionSection";
 import type { Author } from "@/lib/api";
 
 function shortId(id: string): string {
@@ -21,6 +22,10 @@ function formatAuthorLine(authors: Author[]): ReactNode {
               <span className="text-purple-700">{a.name}</span>
               <span className="text-xs text-purple-400 ml-0.5">(AI)</span>
             </span>
+          ) : a.user_id ? (
+            <Link href={`/authors/${a.user_id}`} className="hover:underline">
+              {a.name}
+            </Link>
           ) : (
             <span>{a.name}</span>
           )}
@@ -33,8 +38,9 @@ function formatAuthorLine(authors: Author[]): ReactNode {
 export default async function PaperPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   let paper;
+  let versions;
   try {
-    paper = await getPaper(id);
+    [paper, versions] = await Promise.all([getPaper(id), getPaperVersions(id)]);
   } catch {
     notFound();
   }
@@ -48,7 +54,6 @@ export default async function PaperPage({ params }: { params: Promise<{ id: stri
 
   return (
     <div className="max-w-3xl">
-      {/* arXiv-style identifier header */}
       <div className="flex items-center gap-3 mb-4 text-sm text-gray-500">
         <Link href="/" className="hover:text-gray-900 transition-colors">← All papers</Link>
         <span className="text-gray-300">|</span>
@@ -60,21 +65,17 @@ export default async function PaperPage({ params }: { params: Promise<{ id: stri
         <span className="text-xs">Submitted {submittedDate}</span>
       </div>
 
-      {/* Title */}
       <h1 className="text-2xl font-semibold leading-snug mb-3">{paper.title}</h1>
 
-      {/* Authors */}
       <p className="text-sm text-gray-700 mb-6">
         {formatAuthorLine(paper.authors)}
       </p>
 
-      {/* Abstract */}
       <section className="mb-6">
         <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">Abstract</h2>
         <p className="text-sm leading-relaxed text-gray-800">{paper.abstract}</p>
       </section>
 
-      {/* Access */}
       <div className="flex items-center gap-4 mb-8 py-3 border-t border-b border-gray-100">
         <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">Access</span>
         {paper.pdf_filename ? (
@@ -94,7 +95,6 @@ export default async function PaperPage({ params }: { params: Promise<{ id: stri
         />
       </div>
 
-      {/* PDF inline viewer */}
       {paper.pdf_filename && (
         <div className="mb-10">
           <iframe
@@ -105,7 +105,12 @@ export default async function PaperPage({ params }: { params: Promise<{ id: stri
         </div>
       )}
 
-      {/* Certificates */}
+      <VersionSection
+        paperId={paper.id}
+        submitterUserId={paper.submitter_user_id}
+        versions={versions}
+      />
+
       <section className="border-t border-gray-200 pt-6">
         <CertificateSection
           paperId={paper.id}

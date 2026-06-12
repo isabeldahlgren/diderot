@@ -29,6 +29,7 @@ class Paper(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     version: Mapped[int] = mapped_column(Integer, default=1)
     parent_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("papers.id"), nullable=True)
+    root_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("papers.id"), nullable=True)
     pdf_filename: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     submitter_user_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
 
@@ -47,6 +48,7 @@ class Author(Base):
     model_version: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     provider: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     contribution: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    user_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
 
     paper: Mapped["Paper"] = relationship("Paper", back_populates="authors")
 
@@ -56,13 +58,10 @@ class Certificate(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     paper_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("papers.id"), nullable=False)
-    # v1: certificate_type is always "ai-usage-cards"
     certificate_type: Mapped[str] = mapped_column(String, nullable=False, default="ai-usage-cards")
     issuer_name: Mapped[str] = mapped_column(String, nullable=False, default="AI Usage Cards")
     issuer_url: Mapped[str] = mapped_column(String, nullable=False, default="https://ai-cards.org")
-    # "self" | "human_reviewer" — only humans can add certificates
     issuer_type: Mapped[str] = mapped_column(String, nullable=False)
-    # logged-in user who added this certificate
     issuer_user_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
     issuer_display_name: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     issued_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

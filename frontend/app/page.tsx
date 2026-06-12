@@ -5,10 +5,25 @@ function shortId(id: string): string {
   return id.replace(/-/g, "").slice(0, 8);
 }
 
-function formatAuthors(authors: Author[]): string {
-  return authors
-    .map((a) => (a.author_type === "ai" ? `AI: ${a.name}` : a.name))
-    .join("; ");
+function AuthorList({ authors }: { authors: Author[] }) {
+  return (
+    <span>
+      {authors.map((a, i) => (
+        <span key={a.id}>
+          {i > 0 && <span className="text-gray-300 mx-1">·</span>}
+          {a.author_type === "ai" ? (
+            <span className="text-purple-600">AI: {a.name}</span>
+          ) : a.user_id ? (
+            <Link href={`/authors/${a.user_id}`} className="hover:underline">
+              {a.name}
+            </Link>
+          ) : (
+            <span>{a.name}</span>
+          )}
+        </span>
+      ))}
+    </span>
+  );
 }
 
 function PaperRow({ paper, index }: { paper: PaperListItem; index: number }) {
@@ -43,7 +58,7 @@ function PaperRow({ paper, index }: { paper: PaperListItem; index: number }) {
       </Link>
 
       <p className="text-sm text-gray-600 mb-1">
-        {formatAuthors(paper.authors)}
+        <AuthorList authors={paper.authors} />
       </p>
 
       <p className="text-sm text-gray-500 line-clamp-2 mb-2 leading-relaxed">

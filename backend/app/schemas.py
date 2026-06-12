@@ -18,6 +18,7 @@ class AuthorIn(BaseModel):
 class AuthorOut(AuthorIn):
     id: uuid.UUID
     paper_id: uuid.UUID
+    user_id: Optional[uuid.UUID] = None
 
 
 class CertificateIn(BaseModel):
@@ -50,7 +51,9 @@ class PaperOut(BaseModel):
     created_at: datetime
     version: int
     parent_id: Optional[uuid.UUID]
+    root_id: Optional[uuid.UUID] = None
     pdf_filename: Optional[str]
+    submitter_user_id: Optional[uuid.UUID] = None
     authors: list[AuthorOut]
     certificates: list[CertificateOut]
 
@@ -64,6 +67,8 @@ class PaperListItem(BaseModel):
     subject_area: str
     created_at: datetime
     version: int
+    root_id: Optional[uuid.UUID] = None
+    submitter_user_id: Optional[uuid.UUID] = None
     authors: list[AuthorOut]
     certificate_count: int
 
@@ -84,6 +89,14 @@ class UserLogin(BaseModel):
 class UserOut(BaseModel):
     id: uuid.UUID
     email: str
+    name: str
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class UserPublic(BaseModel):
+    id: uuid.UUID
     name: str
     created_at: datetime
 
