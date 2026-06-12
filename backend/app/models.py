@@ -30,6 +30,7 @@ class Paper(Base):
     version: Mapped[int] = mapped_column(Integer, default=1)
     parent_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("papers.id"), nullable=True)
     pdf_filename: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    submitter_user_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
 
     authors: Mapped[list["Author"]] = relationship("Author", back_populates="paper", cascade="all, delete-orphan")
     certificates: Mapped[list["Certificate"]] = relationship("Certificate", back_populates="paper", cascade="all, delete-orphan")

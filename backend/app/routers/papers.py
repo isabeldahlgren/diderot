@@ -5,8 +5,9 @@ from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.models import Paper, Author
+from app.models import Paper, Author, User
 from app.schemas import PaperOut, PaperListItem
+from app.auth import get_current_user
 
 router = APIRouter(prefix="/api/v1/papers", tags=["papers"])
 
@@ -22,6 +23,7 @@ async def create_paper(
     authors: str = Form(...),  # JSON string
     pdf: UploadFile = File(...),
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     if pdf.content_type != "application/pdf":
         raise HTTPException(status_code=400, detail="PDF file required")
@@ -36,7 +38,7 @@ async def create_paper(
     content = await pdf.read()
     path.write_bytes(content)
 
-    paper = Paper(title=title, abstract=abstract, subject_area=subject_area, pdf_filename=filename)
+    paper = Paper(title=title, abstract=abstract, subject_area=subject_area, pdf_filename=filename, submitter_user_id=current_user.id)
     db.add(paper)
     db.flush()
 

@@ -25,6 +25,9 @@ def add_certificate(
     if cert_in.issuer_type not in VALID_ISSUER_TYPES:
         raise HTTPException(status_code=400, detail=f"issuer_type must be one of {VALID_ISSUER_TYPES}")
 
+    if cert_in.issuer_type == "self" and paper.submitter_user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Only the paper's submitter can add a self-issued certificate")
+
     cert = Certificate(
         paper_id=paper_id,
         issuer_type=cert_in.issuer_type,
