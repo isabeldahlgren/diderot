@@ -7,6 +7,8 @@ import CiteButton from "./CiteButton";
 import VersionSection from "./VersionSection";
 import type { Author } from "@/lib/api";
 
+const FILES_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000") + "/files";
+
 function shortId(id: string): string {
   return id.replace(/-/g, "").slice(0, 8);
 }
@@ -80,7 +82,7 @@ export default async function PaperPage({ params }: { params: Promise<{ id: stri
         <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">Access</span>
         {paper.pdf_filename ? (
           <a
-            href={`http://localhost:8000/files/${paper.pdf_filename}`}
+            href={`${FILES_BASE}/${paper.pdf_filename}`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm border border-gray-800 px-3 py-1 text-gray-800 hover:bg-gray-900 hover:text-white transition-colors"
@@ -98,7 +100,7 @@ export default async function PaperPage({ params }: { params: Promise<{ id: stri
       {paper.pdf_filename && (
         <div className="mb-10">
           <iframe
-            src={`http://localhost:8000/files/${paper.pdf_filename}`}
+            src={`${FILES_BASE}/${paper.pdf_filename}`}
             className="w-full border border-gray-200"
             style={{ height: "70vh" }}
           />
