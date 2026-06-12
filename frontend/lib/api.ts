@@ -2,7 +2,7 @@ const API = "http://localhost:8000/api/v1";
 
 export type AuthorType = "human" | "ai";
 export type IssuerType = "self" | "human_reviewer";
-export type CertificateType = "ai_usage" | "peer_review" | "code_availability" | "data_availability";
+export type CertificateType = "ai_usage" | "peer_review";
 
 export interface Author {
   id: string;

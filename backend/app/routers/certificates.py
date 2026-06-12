@@ -20,14 +20,6 @@ CERT_TYPE_META: dict[str, dict[str, str]] = {
         "issuer_name": "Peer Review",
         "issuer_url": "",
     },
-    "code_availability": {
-        "issuer_name": "Code Availability",
-        "issuer_url": "",
-    },
-    "data_availability": {
-        "issuer_name": "Data Availability",
-        "issuer_url": "",
-    },
 }
 
 

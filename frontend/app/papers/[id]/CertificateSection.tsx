@@ -72,16 +72,6 @@ const CERT_TYPE_DEFS: Record<CertificateType, { label: string; description: stri
     description: "An external reviewer attests to the quality and soundness of this work",
     badgeColor: "bg-blue-50 text-blue-700 border-blue-200",
   },
-  code_availability: {
-    label: "Code Availability",
-    description: "Links to the source code for this paper",
-    badgeColor: "bg-green-50 text-green-700 border-green-200",
-  },
-  data_availability: {
-    label: "Data Availability",
-    description: "Links to the dataset used in this paper",
-    badgeColor: "bg-amber-50 text-amber-700 border-amber-200",
-  },
 };
 
 function certTypeLabel(type: string): string {
@@ -156,63 +146,12 @@ function PeerReviewPayloadView({ payload }: { payload: Record<string, unknown> }
   );
 }
 
-function CodeAvailabilityPayloadView({ payload }: { payload: Record<string, unknown> }) {
-  return (
-    <div className="space-y-3">
-      {payload.repository_url && (
-        <FieldRow
-          label="Repository"
-          value={
-            <a
-              href={payload.repository_url as string}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline text-blue-700"
-            >
-              {payload.repository_url as string}
-            </a>
-          }
-        />
-      )}
-      {payload.license && <FieldRow label="License" value={payload.license as string} />}
-      {payload.notes && <FieldRow label="Notes" value={payload.notes as string} />}
-    </div>
-  );
-}
-
-function DataAvailabilityPayloadView({ payload }: { payload: Record<string, unknown> }) {
-  return (
-    <div className="space-y-3">
-      {payload.dataset_url && (
-        <FieldRow
-          label="Dataset"
-          value={
-            <a
-              href={payload.dataset_url as string}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline text-blue-700"
-            >
-              {payload.dataset_url as string}
-            </a>
-          }
-        />
-      )}
-      {payload.repository && <FieldRow label="Repository" value={payload.repository as string} />}
-      {payload.license && <FieldRow label="License" value={payload.license as string} />}
-      {payload.notes && <FieldRow label="Notes" value={payload.notes as string} />}
-    </div>
-  );
-}
-
 function PayloadView({ cert }: { cert: Certificate }) {
   const t = cert.certificate_type;
   if (t === "ai_usage" || t === "ai-usage-cards") {
     return <AiUsagePayloadView payload={cert.payload} />;
   }
   if (t === "peer_review") return <PeerReviewPayloadView payload={cert.payload} />;
-  if (t === "code_availability") return <CodeAvailabilityPayloadView payload={cert.payload} />;
-  if (t === "data_availability") return <DataAvailabilityPayloadView payload={cert.payload} />;
   return (
     <pre className="text-xs text-gray-700 overflow-auto bg-gray-50 p-3 leading-relaxed">
       {JSON.stringify(cert.payload, null, 2)}
@@ -508,134 +447,6 @@ function PeerReviewForm({
   );
 }
 
-// ── Form: Code Availability ──────────────────────────────────────────────────
-
-interface CodeAvailState {
-  repository_url: string;
-  license: string;
-  notes: string;
-}
-
-function CodeAvailForm({
-  state,
-  onChange,
-}: {
-  state: CodeAvailState;
-  onChange: (s: CodeAvailState) => void;
-}) {
-  return (
-    <div className="space-y-4">
-      <div>
-        <label className="block text-xs font-medium mb-1">Repository URL</label>
-        <input
-          type="url"
-          className="w-full border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-500"
-          placeholder="https://github.com/..."
-          value={state.repository_url}
-          onChange={(e) => onChange({ ...state, repository_url: e.target.value })}
-          required
-        />
-      </div>
-      <div>
-        <label className="block text-xs font-medium mb-1">License</label>
-        <CustomSelect
-          value={state.license}
-          onChange={(v) => onChange({ ...state, license: v })}
-          options={[
-            { value: "MIT", label: "MIT" },
-            { value: "Apache 2.0", label: "Apache 2.0" },
-            { value: "GPL v3", label: "GPL v3" },
-            { value: "BSD 3-Clause", label: "BSD 3-Clause" },
-            { value: "CC BY 4.0", label: "CC BY 4.0" },
-            { value: "Other", label: "Other" },
-          ]}
-        />
-      </div>
-      <div>
-        <label className="block text-xs font-medium mb-1">Notes</label>
-        <textarea
-          className="w-full border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-gray-500 resize-none"
-          rows={2}
-          placeholder="Additional context"
-          value={state.notes}
-          onChange={(e) => onChange({ ...state, notes: e.target.value })}
-        />
-      </div>
-    </div>
-  );
-}
-
-// ── Form: Data Availability ──────────────────────────────────────────────────
-
-interface DataAvailState {
-  dataset_url: string;
-  repository: string;
-  license: string;
-  notes: string;
-}
-
-function DataAvailForm({
-  state,
-  onChange,
-}: {
-  state: DataAvailState;
-  onChange: (s: DataAvailState) => void;
-}) {
-  return (
-    <div className="space-y-4">
-      <div>
-        <label className="block text-xs font-medium mb-1">Dataset URL</label>
-        <input
-          type="url"
-          className="w-full border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-500"
-          placeholder="https://zenodo.org/record/..."
-          value={state.dataset_url}
-          onChange={(e) => onChange({ ...state, dataset_url: e.target.value })}
-          required
-        />
-      </div>
-      <div>
-        <label className="block text-xs font-medium mb-1">Repository / Host</label>
-        <CustomSelect
-          value={state.repository}
-          onChange={(v) => onChange({ ...state, repository: v })}
-          options={[
-            { value: "Zenodo", label: "Zenodo" },
-            { value: "OSF", label: "OSF" },
-            { value: "Figshare", label: "Figshare" },
-            { value: "Dryad", label: "Dryad" },
-            { value: "Harvard Dataverse", label: "Harvard Dataverse" },
-            { value: "Other", label: "Other" },
-          ]}
-        />
-      </div>
-      <div>
-        <label className="block text-xs font-medium mb-1">License</label>
-        <CustomSelect
-          value={state.license}
-          onChange={(v) => onChange({ ...state, license: v })}
-          options={[
-            { value: "CC BY 4.0", label: "CC BY 4.0" },
-            { value: "CC0 1.0", label: "CC0 (Public Domain)" },
-            { value: "CC BY-NC 4.0", label: "CC BY-NC 4.0" },
-            { value: "Other", label: "Other" },
-          ]}
-        />
-      </div>
-      <div>
-        <label className="block text-xs font-medium mb-1">Notes</label>
-        <textarea
-          className="w-full border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-gray-500 resize-none"
-          rows={2}
-          placeholder="Additional context"
-          value={state.notes}
-          onChange={(e) => onChange({ ...state, notes: e.target.value })}
-        />
-      </div>
-    </div>
-  );
-}
-
 // ── Certificate modal ────────────────────────────────────────────────────────
 
 function splitLines(s: string): string[] {
@@ -674,18 +485,6 @@ export function CertificateModal({
     summary: "",
     comments: "",
   });
-  const [codeAvail, setCodeAvail] = useState<CodeAvailState>({
-    repository_url: "",
-    license: "MIT",
-    notes: "",
-  });
-  const [dataAvail, setDataAvail] = useState<DataAvailState>({
-    dataset_url: "",
-    repository: "Zenodo",
-    license: "CC BY 4.0",
-    notes: "",
-  });
-
   const close = useCallback(() => onClose(), [onClose]);
 
   useEffect(() => {
@@ -713,19 +512,6 @@ export function CertificateModal({
           recommendation: peerReview.recommendation,
           ...(peerReview.summary && { summary: peerReview.summary }),
           ...(peerReview.comments && { comments: peerReview.comments }),
-        };
-      case "code_availability":
-        return {
-          repository_url: codeAvail.repository_url,
-          license: codeAvail.license,
-          ...(codeAvail.notes && { notes: codeAvail.notes }),
-        };
-      case "data_availability":
-        return {
-          dataset_url: dataAvail.dataset_url,
-          repository: dataAvail.repository,
-          license: dataAvail.license,
-          ...(dataAvail.notes && { notes: dataAvail.notes }),
         };
     }
   }
@@ -798,13 +584,6 @@ export function CertificateModal({
           {certType === "peer_review" && (
             <PeerReviewForm state={peerReview} onChange={setPeerReview} />
           )}
-          {certType === "code_availability" && (
-            <CodeAvailForm state={codeAvail} onChange={setCodeAvail} />
-          )}
-          {certType === "data_availability" && (
-            <DataAvailForm state={dataAvail} onChange={setDataAvail} />
-          )}
-
           {error && <p className="text-xs text-red-500">{error}</p>}
 
           <div className="flex gap-3 pt-1 border-t border-gray-100">

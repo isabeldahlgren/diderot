@@ -24,8 +24,6 @@ export default function AboutPage() {
           <ul className="mt-2 space-y-1 ml-4">
             <li><span className="font-medium">AI Authorship Disclosure</span> — declares which AI models were used and in what capacity.</li>
             <li><span className="font-medium">Peer Review</span> — an external reviewer assessment of quality and soundness.</li>
-            <li><span className="font-medium">Code Availability</span> — links to the source code repository.</li>
-            <li><span className="font-medium">Data Availability</span> — links to the dataset used in the research.</li>
           </ul>
         </section>
 
