@@ -88,7 +88,7 @@ export default async function AuthorPage({ params }: { params: Promise<{ userId:
         </div>
       )}
 
-      <div className="mb-4 border-t border-gray-200 pt-8">
+      <div className="mb-4">
         <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400">
           Peer reviews — {reviews.length} paper{reviews.length !== 1 ? "s" : ""}
         </h2>
