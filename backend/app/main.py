@@ -31,9 +31,13 @@ with engine.connect() as conn:
 
 app = FastAPI(title="OpenAuthor API")
 
+_cors_origins = ["http://localhost:3000"]
+if _extra := os.getenv("CORS_ORIGINS"):
+    _cors_origins += [o.strip() for o in _extra.split(",")]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=_cors_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )
