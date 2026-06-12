@@ -94,13 +94,24 @@ function AuthorRowItem({
   return (
     <div className="p-4 border border-gray-200 mb-3">
       <div className="flex gap-3 mb-3">
-        <input
-          className="flex-1 border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-500"
-          placeholder="Name"
-          value={author.name}
-          onChange={(e) => onChange(index, "name", e.target.value)}
-          required
-        />
+        {!isAI && (
+          <input
+            className="flex-1 border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-500"
+            placeholder="Name"
+            value={author.name}
+            onChange={(e) => onChange(index, "name", e.target.value)}
+            required
+          />
+        )}
+        {isAI && (
+          <input
+            className="flex-1 border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-500"
+            placeholder="Model ID (e.g. anthropic/claude-sonnet-4-6)"
+            value={author.model_id}
+            onChange={(e) => onChange(index, "model_id", e.target.value)}
+            required
+          />
+        )}
         <CustomSelect
           value={author.author_type}
           onChange={(v) => onChange(index, "author_type", v)}
@@ -116,14 +127,6 @@ function AuthorRowItem({
           </button>
         )}
       </div>
-      {isAI && (
-        <input
-          className="w-full border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-500"
-          placeholder="Model ID (e.g. anthropic/claude-sonnet-4-6)"
-          value={author.model_id}
-          onChange={(e) => onChange(index, "model_id", e.target.value)}
-        />
-      )}
     </div>
   );
 }
@@ -169,7 +172,7 @@ export default function SubmitPage() {
           const slashIdx = a.model_id.indexOf("/");
           const provider = slashIdx > -1 ? a.model_id.slice(0, slashIdx) : undefined;
           return {
-            name: a.name,
+            name: a.author_type === "ai" ? (a.model_id || a.name) : a.name,
             author_type: a.author_type,
             model_version: a.model_id || undefined,
             provider,
@@ -292,7 +295,7 @@ export default function SubmitPage() {
             <input
               type="file"
               accept="application/pdf"
-              className="sr-only"
+              style={{ display: "none" }}
               onChange={(e) => setPdf(e.target.files?.[0] ?? null)}
               required
             />

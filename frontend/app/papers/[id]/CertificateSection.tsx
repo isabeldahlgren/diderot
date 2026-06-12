@@ -1,9 +1,61 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { addCertificate, type Certificate, type IssuerType } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+
+function CustomSelect({
+  value,
+  onChange,
+  options,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  options: { value: string; label: string }[];
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handleOutside);
+    return () => document.removeEventListener("mousedown", handleOutside);
+  }, []);
+
+  const selected = options.find((o) => o.value === value);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="border border-gray-300 px-3 py-1.5 text-sm bg-white focus:outline-none focus:border-gray-500 cursor-pointer flex items-center gap-2 whitespace-nowrap"
+      >
+        {selected?.label ?? value}
+        <span className="text-gray-400 text-xs select-none">▾</span>
+      </button>
+      {open && (
+        <div className="absolute z-10 top-full left-0 mt-0.5 border border-gray-300 bg-white shadow-sm min-w-full">
+          {options.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => { onChange(opt.value); setOpen(false); }}
+              className={`block w-full text-left px-3 py-1.5 text-sm hover:bg-gray-50 ${
+                opt.value === value ? "text-gray-900 font-medium" : "text-gray-600"
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ── Certificate card ────────────────────────────────────────────────────────
 
@@ -75,18 +127,12 @@ const ROLES = [
 ] as const;
 
 interface ModelRow {
-  name: string;
-  provider: string;
-  version: string;
-  approximate_tokens: string;
+  model_id: string;
   roles: string[];
 }
 
 const emptyModel = (): ModelRow => ({
-  name: "",
-  provider: "",
-  version: "",
-  approximate_tokens: "",
+  model_id: "",
   roles: [],
 });
 
@@ -115,9 +161,9 @@ function ModelRowForm({
       <div className="flex gap-2 mb-2">
         <input
           className="flex-1 border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:border-gray-500 bg-white"
-          placeholder="Model name (e.g. Claude Sonnet 4.6)"
-          value={model.name}
-          onChange={(e) => onChange(index, "name", e.target.value)}
+          placeholder="Model ID (e.g. nvidia/llama-nemotron-rerank-vl-1b-v2:free)"
+          value={model.model_id}
+          onChange={(e) => onChange(index, "model_id", e.target.value)}
           required
         />
         {canRemove && (
@@ -130,38 +176,21 @@ function ModelRowForm({
           </button>
         )}
       </div>
-      <div className="flex gap-2 mb-2">
-        <input
-          className="flex-1 border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:border-gray-500 bg-white"
-          placeholder="Provider (e.g. Anthropic)"
-          value={model.provider}
-          onChange={(e) => onChange(index, "provider", e.target.value)}
-        />
-        <input
-          className="flex-1 border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:border-gray-500 bg-white"
-          placeholder="Version (e.g. claude-sonnet-4-6)"
-          value={model.version}
-          onChange={(e) => onChange(index, "version", e.target.value)}
-        />
-        <input
-          type="number"
-          className="w-32 border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:border-gray-500 bg-white"
-          placeholder="~tokens"
-          value={model.approximate_tokens}
-          onChange={(e) => onChange(index, "approximate_tokens", e.target.value)}
-        />
-      </div>
       <div>
         <p className="text-xs text-gray-500 mb-1">Roles</p>
         <div className="flex flex-wrap gap-x-3 gap-y-1">
           {ROLES.map((role) => {
             const checked = model.roles.includes(role);
             return (
-              <label key={role} className="flex items-center gap-1.5 text-xs cursor-pointer select-none">
+              <button
+                key={role}
+                type="button"
+                onClick={() => toggleRole(role)}
+                className="flex items-center gap-1.5 text-xs cursor-pointer select-none"
+              >
                 <span className={`w-3 h-3 flex-shrink-0 border flex items-center justify-center transition-colors text-[7px] leading-none ${checked ? "border-gray-900 bg-gray-900 text-white" : "border-gray-400 text-transparent"}`}>✓</span>
-                <input type="checkbox" className="hidden" checked={checked} onChange={() => toggleRole(role)} />
                 {role.replace(/_/g, " ")}
-              </label>
+              </button>
             );
           })}
         </div>
@@ -187,8 +216,6 @@ export function CertificateModal({
     hasHumanAuthor ? "self" : "human_reviewer"
   );
   const [models, setModels] = useState<ModelRow[]>([emptyModel()]);
-  const [humanVerified, setHumanVerified] = useState(false);
-  const [verificationDesc, setVerificationDesc] = useState("");
   const [aiSections, setAiSections] = useState("");
   const [humanSections, setHumanSections] = useState("");
   const [notes, setNotes] = useState("");
@@ -228,14 +255,9 @@ export function CertificateModal({
 
     const payload: Record<string, unknown> = {
       models_used: models.map((m) => ({
-        name: m.name,
-        ...(m.provider && { provider: m.provider }),
-        ...(m.version && { version: m.version }),
-        ...(m.approximate_tokens && { approximate_tokens: Number(m.approximate_tokens) }),
+        model_id: m.model_id,
         ...(m.roles.length && { roles: m.roles }),
       })),
-      human_verified: humanVerified,
-      ...(humanVerified && verificationDesc && { human_verification_description: verificationDesc }),
       ...(aiSections && { ai_generated_sections: splitLines(aiSections) }),
       ...(humanSections && { human_written_sections: splitLines(humanSections) }),
       ...(notes && { notes }),
@@ -268,17 +290,14 @@ export function CertificateModal({
         <form onSubmit={handleSubmit} className="px-6 py-5 space-y-6">
           <div>
             <label className="block text-xs font-medium mb-1">Your role</label>
-            <div className="relative inline-block">
-              <select
-                className="appearance-none border border-gray-300 px-3 py-1.5 pr-8 text-sm bg-white focus:outline-none focus:border-gray-500 cursor-pointer"
-                value={issuerType}
-                onChange={(e) => setIssuerType(e.target.value as IssuerType)}
-              >
-                {hasHumanAuthor && <option value="self">I am an author of this paper</option>}
-                <option value="human_reviewer">I am an external reviewer</option>
-              </select>
-              <span className="pointer-events-none absolute inset-y-0 right-2.5 flex items-center text-gray-400 text-xs select-none">▾</span>
-            </div>
+            <CustomSelect
+              value={issuerType}
+              onChange={(v) => setIssuerType(v as IssuerType)}
+              options={[
+                ...(hasHumanAuthor ? [{ value: "self", label: "I am an author of this paper" }] : []),
+                { value: "human_reviewer", label: "I am an external reviewer" },
+              ]}
+            />
           </div>
 
           <div>
@@ -300,22 +319,6 @@ export function CertificateModal({
             >
               + add model
             </button>
-          </div>
-
-          <div>
-            <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
-              <span className={`w-3.5 h-3.5 flex-shrink-0 border flex items-center justify-center transition-colors text-[9px] leading-none ${humanVerified ? "border-gray-900 bg-gray-900 text-white" : "border-gray-400 text-transparent"}`}>✓</span>
-              <input type="checkbox" className="hidden" checked={humanVerified} onChange={(e) => setHumanVerified(e.target.checked)} />
-              Results were human-verified
-            </label>
-            {humanVerified && (
-              <input
-                className="mt-2 w-full border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-500"
-                placeholder="Describe how (e.g. all proofs checked by hand)"
-                value={verificationDesc}
-                onChange={(e) => setVerificationDesc(e.target.value)}
-              />
-            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">

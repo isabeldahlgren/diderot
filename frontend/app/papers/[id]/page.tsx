@@ -8,8 +8,6 @@ function AuthorBadge({ a }: { a: Author }) {
     return (
       <span className="inline-flex items-center text-xs px-2 py-1 bg-purple-50 text-purple-700 border border-purple-200">
         AI · {a.name}
-        {a.provider ? ` / ${a.provider}` : ""}
-        {a.model_version ? ` (${a.model_version})` : ""}
       </span>
     );
   }
