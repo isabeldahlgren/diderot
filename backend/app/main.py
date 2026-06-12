@@ -16,6 +16,17 @@ with engine.connect() as conn:
     conn.execute(text("ALTER TABLE certificates ADD COLUMN IF NOT EXISTS version INTEGER NOT NULL DEFAULT 1"))
     conn.execute(text("ALTER TABLE papers ADD COLUMN IF NOT EXISTS root_id UUID REFERENCES papers(id)"))
     conn.execute(text("ALTER TABLE authors ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES users(id)"))
+    # Backfill user_id for human authors whose name matches the paper's submitter
+    conn.execute(text("""
+        UPDATE authors a
+        SET user_id = p.submitter_user_id
+        FROM papers p
+        JOIN users u ON u.id = p.submitter_user_id
+        WHERE a.paper_id = p.id
+          AND a.author_type = 'human'
+          AND a.user_id IS NULL
+          AND lower(a.name) = lower(u.name)
+    """))
     conn.commit()
 
 app = FastAPI(title="OpenAuthor API")
