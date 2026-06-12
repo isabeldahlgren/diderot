@@ -1,0 +1,22 @@
+# Claude Code
+CLAUDE.md
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+*.egg-info/
+dist/
+.env
+
+# Node
+node_modules/
+.next/
+.npm/
+
+# Uploads
+backend/uploads/
+
+# OS
+.DS_Store

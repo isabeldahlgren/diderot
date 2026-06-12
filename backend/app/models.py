@@ -1,0 +1,71 @@
+import uuid
+from datetime import datetime
+from sqlalchemy import String, Text, Integer, Boolean, DateTime, ForeignKey, JSON
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship, mapped_column, Mapped
+from typing import Optional
+from app.database import Base
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    email: Mapped[str] = mapped_column(String, nullable=False, unique=True)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    password_hash: Mapped[str] = mapped_column(String, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    certificates: Mapped[list["Certificate"]] = relationship("Certificate", back_populates="issuer_user")
+
+
+class Paper(Base):
+    __tablename__ = "papers"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    title: Mapped[str] = mapped_column(String, nullable=False)
+    abstract: Mapped[str] = mapped_column(Text, nullable=False)
+    subject_area: Mapped[str] = mapped_column(String, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    parent_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("papers.id"), nullable=True)
+    pdf_filename: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+
+    authors: Mapped[list["Author"]] = relationship("Author", back_populates="paper", cascade="all, delete-orphan")
+    certificates: Mapped[list["Certificate"]] = relationship("Certificate", back_populates="paper", cascade="all, delete-orphan")
+
+
+class Author(Base):
+    __tablename__ = "authors"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    paper_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("papers.id"), nullable=False)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    author_type: Mapped[str] = mapped_column(String, nullable=False)  # "human" | "ai" | "human+ai"
+    model_family: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    model_version: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    provider: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    contribution: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+
+    paper: Mapped["Paper"] = relationship("Paper", back_populates="authors")
+
+
+class Certificate(Base):
+    __tablename__ = "certificates"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    paper_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("papers.id"), nullable=False)
+    # v1: certificate_type is always "ai-usage-cards"
+    certificate_type: Mapped[str] = mapped_column(String, nullable=False, default="ai-usage-cards")
+    issuer_name: Mapped[str] = mapped_column(String, nullable=False, default="AI Usage Cards")
+    issuer_url: Mapped[str] = mapped_column(String, nullable=False, default="https://ai-cards.org")
+    # "self" | "human_reviewer" — only humans can add certificates
+    issuer_type: Mapped[str] = mapped_column(String, nullable=False)
+    # logged-in user who added this certificate
+    issuer_user_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    issuer_display_name: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    issued_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    payload: Mapped[dict] = mapped_column(JSON, nullable=False)
+
+    paper: Mapped["Paper"] = relationship("Paper", back_populates="certificates")
+    issuer_user: Mapped[Optional["User"]] = relationship("User", back_populates="certificates")
