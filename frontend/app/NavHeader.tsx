@@ -7,38 +7,49 @@ export default function NavHeader() {
   const { user, logout } = useAuth();
 
   return (
-    <header className="border-b border-gray-200 py-4">
-      <div className="max-w-4xl mx-auto px-6 flex items-center justify-between">
-        <Link href="/" className="text-xl font-semibold tracking-tight">
-          OpenAuthor
-        </Link>
+    <header className="border-b border-gray-200">
+      <div className="max-w-4xl mx-auto px-6 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-6">
+          <Link href="/" className="text-lg font-semibold tracking-tight">
+            OpenAuthor
+          </Link>
+          <nav className="hidden sm:flex items-center gap-4 text-sm text-gray-500">
+            <Link href="/" className="hover:text-gray-900 transition-colors">
+              Browse
+            </Link>
+            <Link href="/submit" className="hover:text-gray-900 transition-colors">
+              Submit
+            </Link>
+            <Link href="/about" className="hover:text-gray-900 transition-colors">
+              About
+            </Link>
+          </nav>
+        </div>
+
         <div className="flex items-center gap-4">
           {user ? (
             <>
-              <span className="text-sm text-gray-500">{user.name}</span>
+              <span className="text-sm text-gray-500 hidden sm:inline">{user.name}</span>
               <button
                 onClick={logout}
-                className="text-sm text-gray-400 hover:text-gray-700"
+                className="text-sm text-gray-400 hover:text-gray-700 transition-colors"
               >
                 Sign out
               </button>
             </>
           ) : (
             <>
-              <Link href="/login" className="text-sm text-gray-500 hover:text-gray-900">
+              <Link href="/login" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
                 Sign in
               </Link>
-              <Link href="/register" className="text-sm px-4 py-1.5 border border-gray-900 hover:bg-gray-900 hover:text-white transition-colors">
+              <Link
+                href="/register"
+                className="text-sm px-3 py-1 border border-gray-400 text-gray-600 hover:border-gray-900 hover:text-gray-900 transition-colors"
+              >
                 Register
               </Link>
             </>
           )}
-          <Link
-            href="/submit"
-            className="text-sm px-4 py-1.5 border border-gray-900 hover:bg-gray-900 hover:text-white transition-colors"
-          >
-            Submit paper
-          </Link>
         </div>
       </div>
     </header>

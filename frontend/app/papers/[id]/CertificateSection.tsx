@@ -2,8 +2,10 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
-import { addCertificate, type Certificate, type IssuerType } from "@/lib/api";
+import { addCertificate, type Certificate, type IssuerType, type CertificateType } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+
+// ── Shared: CustomSelect ────────────────────────────────────────────────────
 
 function CustomSelect({
   value,
@@ -57,7 +59,168 @@ function CustomSelect({
   );
 }
 
-// ── Certificate card ────────────────────────────────────────────────────────
+// ── Certificate type metadata ───────────────────────────────────────────────
+
+const CERT_TYPE_DEFS: Record<CertificateType, { label: string; description: string; badgeColor: string }> = {
+  ai_usage: {
+    label: "AI Authorship Disclosure",
+    description: "Discloses AI model usage in authoring this paper",
+    badgeColor: "bg-purple-50 text-purple-700 border-purple-200",
+  },
+  peer_review: {
+    label: "Peer Review",
+    description: "An external reviewer attests to the quality and soundness of this work",
+    badgeColor: "bg-blue-50 text-blue-700 border-blue-200",
+  },
+  code_availability: {
+    label: "Code Availability",
+    description: "Links to the source code for this paper",
+    badgeColor: "bg-green-50 text-green-700 border-green-200",
+  },
+  data_availability: {
+    label: "Data Availability",
+    description: "Links to the dataset used in this paper",
+    badgeColor: "bg-amber-50 text-amber-700 border-amber-200",
+  },
+};
+
+function certTypeLabel(type: string): string {
+  return CERT_TYPE_DEFS[type as CertificateType]?.label ?? type;
+}
+
+function certTypeBadgeColor(type: string): string {
+  return CERT_TYPE_DEFS[type as CertificateType]?.badgeColor ?? "bg-gray-50 text-gray-700 border-gray-200";
+}
+
+// ── Human-readable payload renderers ────────────────────────────────────────
+
+function FieldRow({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="flex gap-3 text-sm">
+      <span className="text-gray-500 w-40 flex-shrink-0">{label}</span>
+      <span className="text-gray-800">{value}</span>
+    </div>
+  );
+}
+
+function AiUsagePayloadView({ payload }: { payload: Record<string, unknown> }) {
+  const models = payload.models_used as Array<{ model_id: string; roles?: string[] }> | undefined;
+  const aiSections = payload.ai_generated_sections as string[] | undefined;
+  const humanSections = payload.human_written_sections as string[] | undefined;
+  const notes = payload.notes as string | undefined;
+
+  return (
+    <div className="space-y-3">
+      {models && models.length > 0 && (
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-1.5">Models used</p>
+          <ul className="space-y-1">
+            {models.map((m, i) => (
+              <li key={i} className="text-sm text-gray-800">
+                <span className="font-mono text-gray-700">{m.model_id}</span>
+                {m.roles && m.roles.length > 0 && (
+                  <span className="text-gray-500">
+                    {" — "}{m.roles.map((r) => r.replace(/_/g, " ")).join(", ")}
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {aiSections && aiSections.length > 0 && (
+        <FieldRow label="AI-generated sections" value={aiSections.join(", ")} />
+      )}
+      {humanSections && humanSections.length > 0 && (
+        <FieldRow label="Human-written sections" value={humanSections.join(", ")} />
+      )}
+      {notes && <FieldRow label="Notes" value={notes} />}
+    </div>
+  );
+}
+
+function PeerReviewPayloadView({ payload }: { payload: Record<string, unknown> }) {
+  const RECOMMENDATIONS: Record<string, string> = {
+    accept: "Accept",
+    accept_minor: "Accept with minor revisions",
+    accept_major: "Accept with major revisions",
+    reject: "Reject",
+  };
+  const rec = payload.recommendation as string | undefined;
+  return (
+    <div className="space-y-3">
+      {rec && <FieldRow label="Recommendation" value={RECOMMENDATIONS[rec] ?? rec} />}
+      {payload.summary && <FieldRow label="Summary" value={payload.summary as string} />}
+      {payload.comments && <FieldRow label="Comments" value={payload.comments as string} />}
+    </div>
+  );
+}
+
+function CodeAvailabilityPayloadView({ payload }: { payload: Record<string, unknown> }) {
+  return (
+    <div className="space-y-3">
+      {payload.repository_url && (
+        <FieldRow
+          label="Repository"
+          value={
+            <a
+              href={payload.repository_url as string}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline text-blue-700"
+            >
+              {payload.repository_url as string}
+            </a>
+          }
+        />
+      )}
+      {payload.license && <FieldRow label="License" value={payload.license as string} />}
+      {payload.notes && <FieldRow label="Notes" value={payload.notes as string} />}
+    </div>
+  );
+}
+
+function DataAvailabilityPayloadView({ payload }: { payload: Record<string, unknown> }) {
+  return (
+    <div className="space-y-3">
+      {payload.dataset_url && (
+        <FieldRow
+          label="Dataset"
+          value={
+            <a
+              href={payload.dataset_url as string}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline text-blue-700"
+            >
+              {payload.dataset_url as string}
+            </a>
+          }
+        />
+      )}
+      {payload.repository && <FieldRow label="Repository" value={payload.repository as string} />}
+      {payload.license && <FieldRow label="License" value={payload.license as string} />}
+      {payload.notes && <FieldRow label="Notes" value={payload.notes as string} />}
+    </div>
+  );
+}
+
+function PayloadView({ cert }: { cert: Certificate }) {
+  const t = cert.certificate_type;
+  if (t === "ai_usage" || t === "ai-usage-cards") {
+    return <AiUsagePayloadView payload={cert.payload} />;
+  }
+  if (t === "peer_review") return <PeerReviewPayloadView payload={cert.payload} />;
+  if (t === "code_availability") return <CodeAvailabilityPayloadView payload={cert.payload} />;
+  if (t === "data_availability") return <DataAvailabilityPayloadView payload={cert.payload} />;
+  return (
+    <pre className="text-xs text-gray-700 overflow-auto bg-gray-50 p-3 leading-relaxed">
+      {JSON.stringify(cert.payload, null, 2)}
+    </pre>
+  );
+}
+
+// ── Certificate card ─────────────────────────────────────────────────────────
 
 function CertificateCard({ cert }: { cert: Certificate }) {
   const [open, setOpen] = useState(false);
@@ -67,8 +230,16 @@ function CertificateCard({ cert }: { cert: Certificate }) {
       ? `${cert.issuer_display_name} (author)`
       : `${cert.issuer_display_name} (reviewer)`
     : cert.issuer_type === "self"
-    ? "self-declared by author"
-    : "human reviewer";
+    ? "author"
+    : "external reviewer";
+
+  const date = new Date(cert.issued_at).toLocaleDateString("en-GB", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+
+  const badgeColor = certTypeBadgeColor(cert.certificate_type);
 
   return (
     <div className="border border-gray-200 mb-3">
@@ -76,44 +247,42 @@ function CertificateCard({ cert }: { cert: Certificate }) {
         onClick={() => setOpen((o) => !o)}
         className="w-full text-left px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors"
       >
-        <div className="flex items-center gap-3">
-          <span className="text-sm font-medium">AI Usage Cards</span>
-          <a
-            href={cert.issuer_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => e.stopPropagation()}
-            className="text-xs text-gray-400 hover:underline"
-          >
-            {cert.issuer_url}
-          </a>
-          <span className="text-xs text-gray-400">{issuerLabel}</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-gray-400">
-            {new Date(cert.issued_at).toLocaleDateString("en-GB", {
-              year: "numeric",
-              month: "short",
-              day: "numeric",
-            })}
+        <div className="flex items-center gap-3 flex-wrap">
+          <span className={`text-xs px-2 py-0.5 border ${badgeColor}`}>
+            {certTypeLabel(cert.certificate_type)}
           </span>
+          <span className="text-xs text-gray-500">{issuerLabel}</span>
+        </div>
+        <div className="flex items-center gap-3 flex-shrink-0">
+          <span className="text-xs text-gray-400">{date}</span>
           <span className="text-xs text-gray-400">{open ? "▲" : "▼"}</span>
         </div>
       </button>
       {open && (
         <div className="border-t border-gray-100 px-4 py-4">
-          <pre className="text-xs text-gray-700 overflow-auto bg-gray-50 p-3 leading-relaxed">
-            {JSON.stringify(cert.payload, null, 2)}
-          </pre>
+          <PayloadView cert={cert} />
+          {cert.issuer_url && (
+            <p className="mt-3 text-xs text-gray-400">
+              Standard:{" "}
+              <a
+                href={cert.issuer_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:text-gray-600"
+              >
+                {cert.issuer_url}
+              </a>
+            </p>
+          )}
         </div>
       )}
     </div>
   );
 }
 
-// ── Certificate modal ───────────────────────────────────────────────────────
+// ── Form: AI Usage Disclosure ────────────────────────────────────────────────
 
-const ROLES = [
+const AI_ROLES = [
   "proof_search",
   "formalization",
   "writing",
@@ -131,10 +300,7 @@ interface ModelRow {
   roles: string[];
 }
 
-const emptyModel = (): ModelRow => ({
-  model_id: "",
-  roles: [],
-});
+const emptyModel = (): ModelRow => ({ model_id: "", roles: [] });
 
 function ModelRowForm({
   model,
@@ -161,7 +327,7 @@ function ModelRowForm({
       <div className="flex gap-2 mb-2">
         <input
           className="flex-1 border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:border-gray-500 bg-white"
-          placeholder="Model ID (e.g. nvidia/llama-nemotron-rerank-vl-1b-v2:free)"
+          placeholder="Model ID (e.g. anthropic/claude-sonnet-4-6)"
           value={model.model_id}
           onChange={(e) => onChange(index, "model_id", e.target.value)}
           required
@@ -177,9 +343,9 @@ function ModelRowForm({
         )}
       </div>
       <div>
-        <p className="text-xs text-gray-500 mb-1">Roles</p>
+        <p className="text-xs text-gray-500 mb-1">Roles (select all that apply)</p>
         <div className="flex flex-wrap gap-x-3 gap-y-1">
-          {ROLES.map((role) => {
+          {AI_ROLES.map((role) => {
             const checked = model.roles.includes(role);
             return (
               <button
@@ -188,7 +354,7 @@ function ModelRowForm({
                 onClick={() => toggleRole(role)}
                 className="flex items-center gap-1.5 text-xs cursor-pointer select-none"
               >
-                <span className={`w-3 h-3 flex-shrink-0 border flex items-center justify-center transition-colors text-[7px] leading-none ${checked ? "border-gray-900 bg-gray-900 text-white" : "border-gray-400 text-transparent"}`}>✓</span>
+                <span className={`w-3 h-3 flex-shrink-0 border flex items-center justify-center text-[7px] leading-none ${checked ? "border-gray-900 bg-gray-900 text-white" : "border-gray-400 text-transparent"}`}>✓</span>
                 {role.replace(/_/g, " ")}
               </button>
             );
@@ -197,6 +363,280 @@ function ModelRowForm({
       </div>
     </div>
   );
+}
+
+interface AiUsageState {
+  models: ModelRow[];
+  aiSections: string;
+  humanSections: string;
+  notes: string;
+}
+
+function AiUsageForm({
+  state,
+  onChange,
+}: {
+  state: AiUsageState;
+  onChange: (s: AiUsageState) => void;
+}) {
+  function updateModel(i: number, field: keyof ModelRow, value: string | string[]) {
+    const next = state.models.map((m, idx) => (idx === i ? { ...m, [field]: value } : m));
+    onChange({ ...state, models: next });
+  }
+  function removeModel(i: number) {
+    onChange({ ...state, models: state.models.filter((_, idx) => idx !== i) });
+  }
+  function addModel() {
+    onChange({ ...state, models: [...state.models, emptyModel()] });
+  }
+
+  return (
+    <div className="space-y-5">
+      <div>
+        <label className="block text-xs font-medium mb-2">Models used</label>
+        {state.models.map((m, i) => (
+          <ModelRowForm
+            key={i}
+            model={m}
+            index={i}
+            onChange={updateModel}
+            onRemove={removeModel}
+            canRemove={state.models.length > 1}
+          />
+        ))}
+        <button
+          type="button"
+          onClick={addModel}
+          className="text-xs text-gray-500 hover:text-gray-900 underline"
+        >
+          + add model
+        </button>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-xs font-medium mb-1">AI-generated sections</label>
+          <input
+            className="w-full border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-500"
+            placeholder="introduction, related work"
+            value={state.aiSections}
+            onChange={(e) => onChange({ ...state, aiSections: e.target.value })}
+          />
+          <p className="text-xs text-gray-400 mt-0.5">comma-separated</p>
+        </div>
+        <div>
+          <label className="block text-xs font-medium mb-1">Human-written sections</label>
+          <input
+            className="w-full border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-500"
+            placeholder="proof of main theorem"
+            value={state.humanSections}
+            onChange={(e) => onChange({ ...state, humanSections: e.target.value })}
+          />
+          <p className="text-xs text-gray-400 mt-0.5">comma-separated</p>
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-xs font-medium mb-1">Notes</label>
+        <textarea
+          className="w-full border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-gray-500 resize-none"
+          rows={2}
+          placeholder="Anything not captured above"
+          value={state.notes}
+          onChange={(e) => onChange({ ...state, notes: e.target.value })}
+        />
+      </div>
+    </div>
+  );
+}
+
+// ── Form: Peer Review ────────────────────────────────────────────────────────
+
+interface PeerReviewState {
+  recommendation: string;
+  summary: string;
+  comments: string;
+}
+
+function PeerReviewForm({
+  state,
+  onChange,
+}: {
+  state: PeerReviewState;
+  onChange: (s: PeerReviewState) => void;
+}) {
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="block text-xs font-medium mb-1">Recommendation</label>
+        <CustomSelect
+          value={state.recommendation}
+          onChange={(v) => onChange({ ...state, recommendation: v })}
+          options={[
+            { value: "accept", label: "Accept" },
+            { value: "accept_minor", label: "Accept with minor revisions" },
+            { value: "accept_major", label: "Accept with major revisions" },
+            { value: "reject", label: "Reject" },
+          ]}
+        />
+      </div>
+      <div>
+        <label className="block text-xs font-medium mb-1">Summary</label>
+        <textarea
+          className="w-full border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-gray-500 resize-none"
+          rows={3}
+          placeholder="Brief summary of the paper and its contributions"
+          value={state.summary}
+          onChange={(e) => onChange({ ...state, summary: e.target.value })}
+          required
+        />
+      </div>
+      <div>
+        <label className="block text-xs font-medium mb-1">Detailed comments</label>
+        <textarea
+          className="w-full border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-gray-500 resize-none"
+          rows={4}
+          placeholder="Strengths, weaknesses, and suggested revisions"
+          value={state.comments}
+          onChange={(e) => onChange({ ...state, comments: e.target.value })}
+        />
+      </div>
+    </div>
+  );
+}
+
+// ── Form: Code Availability ──────────────────────────────────────────────────
+
+interface CodeAvailState {
+  repository_url: string;
+  license: string;
+  notes: string;
+}
+
+function CodeAvailForm({
+  state,
+  onChange,
+}: {
+  state: CodeAvailState;
+  onChange: (s: CodeAvailState) => void;
+}) {
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="block text-xs font-medium mb-1">Repository URL</label>
+        <input
+          type="url"
+          className="w-full border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-500"
+          placeholder="https://github.com/..."
+          value={state.repository_url}
+          onChange={(e) => onChange({ ...state, repository_url: e.target.value })}
+          required
+        />
+      </div>
+      <div>
+        <label className="block text-xs font-medium mb-1">License</label>
+        <CustomSelect
+          value={state.license}
+          onChange={(v) => onChange({ ...state, license: v })}
+          options={[
+            { value: "MIT", label: "MIT" },
+            { value: "Apache 2.0", label: "Apache 2.0" },
+            { value: "GPL v3", label: "GPL v3" },
+            { value: "BSD 3-Clause", label: "BSD 3-Clause" },
+            { value: "CC BY 4.0", label: "CC BY 4.0" },
+            { value: "Other", label: "Other" },
+          ]}
+        />
+      </div>
+      <div>
+        <label className="block text-xs font-medium mb-1">Notes</label>
+        <textarea
+          className="w-full border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-gray-500 resize-none"
+          rows={2}
+          placeholder="Additional context"
+          value={state.notes}
+          onChange={(e) => onChange({ ...state, notes: e.target.value })}
+        />
+      </div>
+    </div>
+  );
+}
+
+// ── Form: Data Availability ──────────────────────────────────────────────────
+
+interface DataAvailState {
+  dataset_url: string;
+  repository: string;
+  license: string;
+  notes: string;
+}
+
+function DataAvailForm({
+  state,
+  onChange,
+}: {
+  state: DataAvailState;
+  onChange: (s: DataAvailState) => void;
+}) {
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="block text-xs font-medium mb-1">Dataset URL</label>
+        <input
+          type="url"
+          className="w-full border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-500"
+          placeholder="https://zenodo.org/record/..."
+          value={state.dataset_url}
+          onChange={(e) => onChange({ ...state, dataset_url: e.target.value })}
+          required
+        />
+      </div>
+      <div>
+        <label className="block text-xs font-medium mb-1">Repository / Host</label>
+        <CustomSelect
+          value={state.repository}
+          onChange={(v) => onChange({ ...state, repository: v })}
+          options={[
+            { value: "Zenodo", label: "Zenodo" },
+            { value: "OSF", label: "OSF" },
+            { value: "Figshare", label: "Figshare" },
+            { value: "Dryad", label: "Dryad" },
+            { value: "Harvard Dataverse", label: "Harvard Dataverse" },
+            { value: "Other", label: "Other" },
+          ]}
+        />
+      </div>
+      <div>
+        <label className="block text-xs font-medium mb-1">License</label>
+        <CustomSelect
+          value={state.license}
+          onChange={(v) => onChange({ ...state, license: v })}
+          options={[
+            { value: "CC BY 4.0", label: "CC BY 4.0" },
+            { value: "CC0 1.0", label: "CC0 (Public Domain)" },
+            { value: "CC BY-NC 4.0", label: "CC BY-NC 4.0" },
+            { value: "Other", label: "Other" },
+          ]}
+        />
+      </div>
+      <div>
+        <label className="block text-xs font-medium mb-1">Notes</label>
+        <textarea
+          className="w-full border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-gray-500 resize-none"
+          rows={2}
+          placeholder="Additional context"
+          value={state.notes}
+          onChange={(e) => onChange({ ...state, notes: e.target.value })}
+        />
+      </div>
+    </div>
+  );
+}
+
+// ── Certificate modal ────────────────────────────────────────────────────────
+
+function splitLines(s: string): string[] {
+  return s.split(",").map((x) => x.trim()).filter(Boolean);
 }
 
 export function CertificateModal({
@@ -212,15 +652,36 @@ export function CertificateModal({
   onAdded: (cert: Certificate) => void;
   onClose: () => void;
 }) {
+  const [certType, setCertType] = useState<CertificateType>("ai_usage");
   const [issuerType, setIssuerType] = useState<IssuerType>(
     hasHumanAuthor ? "self" : "human_reviewer"
   );
-  const [models, setModels] = useState<ModelRow[]>([emptyModel()]);
-  const [aiSections, setAiSections] = useState("");
-  const [humanSections, setHumanSections] = useState("");
-  const [notes, setNotes] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  // Per-type form state
+  const [aiUsage, setAiUsage] = useState<AiUsageState>({
+    models: [emptyModel()],
+    aiSections: "",
+    humanSections: "",
+    notes: "",
+  });
+  const [peerReview, setPeerReview] = useState<PeerReviewState>({
+    recommendation: "accept_minor",
+    summary: "",
+    comments: "",
+  });
+  const [codeAvail, setCodeAvail] = useState<CodeAvailState>({
+    repository_url: "",
+    license: "MIT",
+    notes: "",
+  });
+  const [dataAvail, setDataAvail] = useState<DataAvailState>({
+    dataset_url: "",
+    repository: "Zenodo",
+    license: "CC BY 4.0",
+    notes: "",
+  });
 
   const close = useCallback(() => onClose(), [onClose]);
 
@@ -232,40 +693,46 @@ export function CertificateModal({
     return () => window.removeEventListener("keydown", onKey);
   }, [close]);
 
-  function updateModel(i: number, field: keyof ModelRow, value: string | string[]) {
-    setModels((prev) =>
-      prev.map((m, idx) => (idx === i ? { ...m, [field]: value } : m))
-    );
-  }
-
-  function removeModel(i: number) {
-    setModels((prev) => prev.filter((_, idx) => idx !== i));
-  }
-
-  function splitLines(s: string): string[] {
-    return s
-      .split(",")
-      .map((x) => x.trim())
-      .filter(Boolean);
+  function buildPayload(): Record<string, unknown> {
+    switch (certType) {
+      case "ai_usage":
+        return {
+          models_used: aiUsage.models.map((m) => ({
+            model_id: m.model_id,
+            ...(m.roles.length && { roles: m.roles }),
+          })),
+          ...(aiUsage.aiSections && { ai_generated_sections: splitLines(aiUsage.aiSections) }),
+          ...(aiUsage.humanSections && { human_written_sections: splitLines(aiUsage.humanSections) }),
+          ...(aiUsage.notes && { notes: aiUsage.notes }),
+        };
+      case "peer_review":
+        return {
+          recommendation: peerReview.recommendation,
+          ...(peerReview.summary && { summary: peerReview.summary }),
+          ...(peerReview.comments && { comments: peerReview.comments }),
+        };
+      case "code_availability":
+        return {
+          repository_url: codeAvail.repository_url,
+          license: codeAvail.license,
+          ...(codeAvail.notes && { notes: codeAvail.notes }),
+        };
+      case "data_availability":
+        return {
+          dataset_url: dataAvail.dataset_url,
+          repository: dataAvail.repository,
+          license: dataAvail.license,
+          ...(dataAvail.notes && { notes: dataAvail.notes }),
+        };
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-
-    const payload: Record<string, unknown> = {
-      models_used: models.map((m) => ({
-        model_id: m.model_id,
-        ...(m.roles.length && { roles: m.roles }),
-      })),
-      ...(aiSections && { ai_generated_sections: splitLines(aiSections) }),
-      ...(humanSections && { human_written_sections: splitLines(humanSections) }),
-      ...(notes && { notes }),
-    };
-
     setSubmitting(true);
     try {
-      const cert = await addCertificate(paperId, issuerType, payload, token);
+      const cert = await addCertificate(paperId, issuerType, certType, buildPayload(), token);
       onAdded(cert);
       onClose();
     } catch (err) {
@@ -273,6 +740,16 @@ export function CertificateModal({
       setSubmitting(false);
     }
   }
+
+  const certTypeOptions = Object.entries(CERT_TYPE_DEFS).map(([value, def]) => ({
+    value,
+    label: def.label,
+  }));
+
+  const issuerOptions = [
+    ...(hasHumanAuthor ? [{ value: "self", label: "I am an author of this paper" }] : []),
+    { value: "human_reviewer", label: "I am an external reviewer / reader" },
+  ];
 
   return (
     <div
@@ -283,77 +760,47 @@ export function CertificateModal({
 
       <div className="relative bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-xl mx-4">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-          <h2 className="text-base font-semibold">Add AI disclosure certificate</h2>
+          <h2 className="text-base font-semibold">Add certificate</h2>
           <button onClick={close} className="text-gray-400 hover:text-gray-700 text-lg leading-none">✕</button>
         </div>
 
         <form onSubmit={handleSubmit} className="px-6 py-5 space-y-6">
-          <div>
-            <label className="block text-xs font-medium mb-1">Your role</label>
-            <CustomSelect
-              value={issuerType}
-              onChange={(v) => setIssuerType(v as IssuerType)}
-              options={[
-                ...(hasHumanAuthor ? [{ value: "self", label: "I am an author of this paper" }] : []),
-                { value: "human_reviewer", label: "I am an external reviewer" },
-              ]}
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium mb-2">Models used</label>
-            {models.map((m, i) => (
-              <ModelRowForm
-                key={i}
-                model={m}
-                index={i}
-                onChange={updateModel}
-                onRemove={removeModel}
-                canRemove={models.length > 1}
-              />
-            ))}
-            <button
-              type="button"
-              onClick={() => setModels((prev) => [...prev, emptyModel()])}
-              className="text-xs text-gray-500 hover:text-gray-900 underline"
-            >
-              + add model
-            </button>
-          </div>
-
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium mb-1">AI-generated sections</label>
-              <input
-                className="w-full border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-500"
-                placeholder="introduction, related work"
-                value={aiSections}
-                onChange={(e) => setAiSections(e.target.value)}
+              <label className="block text-xs font-medium mb-1">Certificate type</label>
+              <CustomSelect
+                value={certType}
+                onChange={(v) => setCertType(v as CertificateType)}
+                options={certTypeOptions}
               />
-              <p className="text-xs text-gray-400 mt-0.5">comma-separated</p>
+              <p className="text-xs text-gray-400 mt-1">
+                {CERT_TYPE_DEFS[certType].description}
+              </p>
             </div>
             <div>
-              <label className="block text-xs font-medium mb-1">Human-written sections</label>
-              <input
-                className="w-full border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-500"
-                placeholder="proof of main theorem"
-                value={humanSections}
-                onChange={(e) => setHumanSections(e.target.value)}
+              <label className="block text-xs font-medium mb-1">Your role</label>
+              <CustomSelect
+                value={issuerType}
+                onChange={(v) => setIssuerType(v as IssuerType)}
+                options={issuerOptions}
               />
-              <p className="text-xs text-gray-400 mt-0.5">comma-separated</p>
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-medium mb-1">Notes</label>
-            <textarea
-              className="w-full border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-gray-500 resize-none"
-              rows={2}
-              placeholder="Anything not captured above"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-            />
-          </div>
+          <hr className="border-gray-100" />
+
+          {certType === "ai_usage" && (
+            <AiUsageForm state={aiUsage} onChange={setAiUsage} />
+          )}
+          {certType === "peer_review" && (
+            <PeerReviewForm state={peerReview} onChange={setPeerReview} />
+          )}
+          {certType === "code_availability" && (
+            <CodeAvailForm state={codeAvail} onChange={setCodeAvail} />
+          )}
+          {certType === "data_availability" && (
+            <DataAvailForm state={dataAvail} onChange={setDataAvail} />
+          )}
 
           {error && <p className="text-xs text-red-500">{error}</p>}
 
@@ -379,7 +826,7 @@ export function CertificateModal({
   );
 }
 
-// ── Main export ─────────────────────────────────────────────────────────────
+// ── Main export ──────────────────────────────────────────────────────────────
 
 export default function CertificateSection({
   paperId,
@@ -396,28 +843,32 @@ export default function CertificateSection({
 
   return (
     <div>
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400 mb-3">
-        Certificates
-      </h2>
+      <div className="flex items-baseline justify-between mb-4">
+        <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+          Certificates
+        </h2>
+        {user && token && (
+          <button
+            onClick={() => setModalOpen(true)}
+            className="text-xs text-gray-500 hover:text-gray-900 underline"
+          >
+            + add certificate
+          </button>
+        )}
+      </div>
 
       {certificates.length === 0 && (
-        <p className="text-sm text-gray-400 mb-4">No certificates attached.</p>
+        <p className="text-sm text-gray-400 mb-4">No certificates attached to this paper.</p>
       )}
 
       {certificates.map((c) => (
         <CertificateCard key={c.id} cert={c} />
       ))}
 
-      {user && token ? (
-        <button
-          onClick={() => setModalOpen(true)}
-          className="text-sm text-gray-500 hover:text-gray-900 underline"
-        >
-          + add AI disclosure certificate
-        </button>
-      ) : (
-        <p className="text-sm text-gray-400">
-          <Link href="/login" className="underline hover:text-gray-900">Sign in</Link> to add a certificate.
+      {!user && (
+        <p className="text-sm text-gray-400 mt-3">
+          <Link href="/login" className="underline hover:text-gray-900">Sign in</Link>{" "}
+          to add a certificate.
         </p>
       )}
 

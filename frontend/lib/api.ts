@@ -2,6 +2,7 @@ const API = "http://localhost:8000/api/v1";
 
 export type AuthorType = "human" | "ai";
 export type IssuerType = "self" | "human_reviewer";
+export type CertificateType = "ai_usage" | "peer_review" | "code_availability" | "data_availability";
 
 export interface Author {
   id: string;
@@ -88,6 +89,7 @@ export async function submitPaper(data: {
 export async function addCertificate(
   paperId: string,
   issuer_type: IssuerType,
+  certificate_type: CertificateType,
   payload: Record<string, unknown>,
   token: string,
 ): Promise<Certificate> {
@@ -97,7 +99,7 @@ export async function addCertificate(
       "Content-Type": "application/json",
       "Authorization": `Bearer ${token}`,
     },
-    body: JSON.stringify({ issuer_type, payload }),
+    body: JSON.stringify({ issuer_type, certificate_type, payload }),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));

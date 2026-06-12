@@ -1,19 +1,31 @@
+import type { ReactNode } from "react";
 import { getPaper } from "@/lib/api";
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import CertificateSection from "./CertificateSection";
+import CiteButton from "./CiteButton";
 import type { Author } from "@/lib/api";
 
-function AuthorBadge({ a }: { a: Author }) {
-  if (a.author_type === "ai") {
-    return (
-      <span className="inline-flex items-center text-xs px-2 py-1 bg-purple-50 text-purple-700 border border-purple-200">
-        AI · {a.name}
-      </span>
-    );
-  }
+function shortId(id: string): string {
+  return id.replace(/-/g, "").slice(0, 8);
+}
+
+function formatAuthorLine(authors: Author[]): ReactNode {
   return (
-    <span className="inline-flex items-center text-xs px-2 py-1 bg-gray-50 text-gray-700 border border-gray-200">
-      {a.name}
+    <span>
+      {authors.map((a, i) => (
+        <span key={a.id}>
+          {i > 0 && <span className="text-gray-300 mx-1">·</span>}
+          {a.author_type === "ai" ? (
+            <span>
+              <span className="text-purple-700">{a.name}</span>
+              <span className="text-xs text-purple-400 ml-0.5">(AI)</span>
+            </span>
+          ) : (
+            <span>{a.name}</span>
+          )}
+        </span>
+      ))}
     </span>
   );
 }
@@ -28,47 +40,63 @@ export default async function PaperPage({ params }: { params: Promise<{ id: stri
   }
 
   const hasHumanAuthor = paper.authors.some((a) => a.author_type === "human");
+  const submittedDate = new Date(paper.created_at).toLocaleDateString("en-GB", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 
   return (
-    <div>
+    <div className="max-w-3xl">
+      {/* arXiv-style identifier header */}
+      <div className="flex items-center gap-3 mb-4 text-sm text-gray-500">
+        <Link href="/" className="hover:text-gray-900 transition-colors">← All papers</Link>
+        <span className="text-gray-300">|</span>
+        <span className="font-mono text-xs">OA:{shortId(paper.id)}</span>
+        <span className="border border-gray-300 px-1.5 py-0.5 text-xs leading-tight">
+          {paper.subject_area}
+        </span>
+        <span className="text-xs">v{paper.version}</span>
+        <span className="text-xs">Submitted {submittedDate}</span>
+      </div>
+
+      {/* Title */}
       <h1 className="text-2xl font-semibold leading-snug mb-3">{paper.title}</h1>
 
-      <div className="flex flex-wrap gap-2 mb-4">
-        {paper.authors.map((a) => (
-          <AuthorBadge key={a.id} a={a} />
-        ))}
-      </div>
+      {/* Authors */}
+      <p className="text-sm text-gray-700 mb-6">
+        {formatAuthorLine(paper.authors)}
+      </p>
 
-      <div className="flex gap-4 text-xs text-gray-400 mb-6">
-        <span>{paper.subject_area}</span>
-        <span>
-          {new Date(paper.created_at).toLocaleDateString("en-GB", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          })}
-        </span>
-        <span>v{paper.version}</span>
-      </div>
-
-      <div className="mb-8">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400 mb-2">Abstract</h2>
+      {/* Abstract */}
+      <section className="mb-6">
+        <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">Abstract</h2>
         <p className="text-sm leading-relaxed text-gray-800">{paper.abstract}</p>
+      </section>
+
+      {/* Access */}
+      <div className="flex items-center gap-4 mb-8 py-3 border-t border-b border-gray-100">
+        <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">Access</span>
+        {paper.pdf_filename ? (
+          <a
+            href={`http://localhost:8000/files/${paper.pdf_filename}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm border border-gray-800 px-3 py-1 text-gray-800 hover:bg-gray-900 hover:text-white transition-colors"
+          >
+            PDF
+          </a>
+        ) : (
+          <span className="text-sm text-gray-400">No PDF</span>
+        )}
+        <CiteButton
+          bibtex={`@misc{openauthor:${shortId(paper.id)},\n  title={${paper.title}},\n  author={${paper.authors.map((a) => a.name).join(" and ")}},\n  year={${new Date(paper.created_at).getFullYear()}},\n  note={OpenAuthor preprint OA:${shortId(paper.id)}}\n}`}
+        />
       </div>
 
+      {/* PDF inline viewer */}
       {paper.pdf_filename && (
-        <div className="mb-8">
-          <div className="flex items-center gap-4 mb-3">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">Paper</h2>
-            <a
-              href={`http://localhost:8000/files/${paper.pdf_filename}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-gray-500 hover:underline"
-            >
-              Download PDF
-            </a>
-          </div>
+        <div className="mb-10">
           <iframe
             src={`http://localhost:8000/files/${paper.pdf_filename}`}
             className="w-full border border-gray-200"
@@ -77,11 +105,14 @@ export default async function PaperPage({ params }: { params: Promise<{ id: stri
         </div>
       )}
 
-      <CertificateSection
-        paperId={paper.id}
-        initialCertificates={paper.certificates}
-        hasHumanAuthor={hasHumanAuthor}
-      />
+      {/* Certificates */}
+      <section className="border-t border-gray-200 pt-6">
+        <CertificateSection
+          paperId={paper.id}
+          initialCertificates={paper.certificates}
+          hasHumanAuthor={hasHumanAuthor}
+        />
+      </section>
     </div>
   );
 }

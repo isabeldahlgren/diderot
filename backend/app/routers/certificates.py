@@ -10,6 +10,25 @@ router = APIRouter(prefix="/api/v1/papers", tags=["certificates"])
 
 VALID_ISSUER_TYPES = {"self", "human_reviewer"}
 
+CERT_TYPE_META: dict[str, dict[str, str]] = {
+    "ai_usage": {
+        "issuer_name": "AI Authorship Disclosure",
+        "issuer_url": "https://ai-cards.org",
+    },
+    "peer_review": {
+        "issuer_name": "Peer Review",
+        "issuer_url": "",
+    },
+    "code_availability": {
+        "issuer_name": "Code Availability",
+        "issuer_url": "",
+    },
+    "data_availability": {
+        "issuer_name": "Data Availability",
+        "issuer_url": "",
+    },
+}
+
 
 @router.post("/{paper_id}/certificates", response_model=CertificateOut)
 def add_certificate(
@@ -25,11 +44,21 @@ def add_certificate(
     if cert_in.issuer_type not in VALID_ISSUER_TYPES:
         raise HTTPException(status_code=400, detail=f"issuer_type must be one of {VALID_ISSUER_TYPES}")
 
+    if cert_in.certificate_type not in CERT_TYPE_META:
+        raise HTTPException(
+            status_code=400,
+            detail=f"certificate_type must be one of {set(CERT_TYPE_META.keys())}",
+        )
+
     if cert_in.issuer_type == "self" and paper.submitter_user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Only the paper's submitter can add a self-issued certificate")
 
+    meta = CERT_TYPE_META[cert_in.certificate_type]
     cert = Certificate(
         paper_id=paper_id,
+        certificate_type=cert_in.certificate_type,
+        issuer_name=meta["issuer_name"],
+        issuer_url=meta["issuer_url"],
         issuer_type=cert_in.issuer_type,
         issuer_user_id=current_user.id,
         issuer_display_name=current_user.name,

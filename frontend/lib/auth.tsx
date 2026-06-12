@@ -31,6 +31,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const token = localStorage.getItem("oa_token");
     const userRaw = localStorage.getItem("oa_user");
     if (token && userRaw) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       try { setState({ token, user: JSON.parse(userRaw) }); } catch {}
     }
   }, []);

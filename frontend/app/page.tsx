@@ -1,44 +1,62 @@
 import Link from "next/link";
 import { listPapers, type PaperListItem, type Author } from "@/lib/api";
 
-function authorBadge(a: Author) {
-  if (a.author_type === "ai") {
-    return (
-      <span
-        key={a.id}
-        className="inline-flex items-center text-xs px-2 py-0.5 bg-purple-50 text-purple-700 border border-purple-200"
-      >
-        AI · {a.name}
-      </span>
-    );
-  }
-  return (
-    <span
-      key={a.id}
-      className="inline-flex items-center text-xs px-2 py-0.5 bg-gray-50 text-gray-600 border border-gray-200"
-    >
-      {a.name}
-    </span>
-  );
+function shortId(id: string): string {
+  return id.replace(/-/g, "").slice(0, 8);
 }
 
-function PaperRow({ paper }: { paper: PaperListItem }) {
+function formatAuthors(authors: Author[]): string {
+  return authors
+    .map((a) => (a.author_type === "ai" ? `AI: ${a.name}` : a.name))
+    .join("; ");
+}
+
+function PaperRow({ paper, index }: { paper: PaperListItem; index: number }) {
+  const date = new Date(paper.created_at).toLocaleDateString("en-GB", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+
+  const hasAI = paper.authors.some((a) => a.author_type === "ai");
+
   return (
-    <article className="py-6 border-b border-gray-100 last:border-0">
+    <article className="py-5 border-b border-gray-100 last:border-0">
+      <div className="flex items-baseline gap-3 mb-1">
+        <span className="text-xs text-gray-400 font-mono whitespace-nowrap">
+          [{index + 1}] OA:{shortId(paper.id)}
+        </span>
+        <span className="text-xs text-gray-500 border border-gray-200 px-1.5 py-0.5 leading-tight">
+          {paper.subject_area}
+        </span>
+        {hasAI && (
+          <span className="text-xs text-purple-600 border border-purple-200 px-1.5 py-0.5 leading-tight bg-purple-50">
+            AI-authored
+          </span>
+        )}
+      </div>
+
       <Link href={`/papers/${paper.id}`} className="group">
         <h2 className="text-base font-medium group-hover:underline leading-snug mb-1">
           {paper.title}
         </h2>
       </Link>
-      <div className="flex flex-wrap gap-1.5 mb-2">
-        {paper.authors.map((a) => authorBadge(a))}
-      </div>
-      <p className="text-sm text-gray-600 line-clamp-2 mb-2">{paper.abstract}</p>
+
+      <p className="text-sm text-gray-600 mb-1">
+        {formatAuthors(paper.authors)}
+      </p>
+
+      <p className="text-sm text-gray-500 line-clamp-2 mb-2 leading-relaxed">
+        {paper.abstract}
+      </p>
+
       <div className="flex gap-4 text-xs text-gray-400">
-        <span>{paper.subject_area}</span>
-        <span>{new Date(paper.created_at).toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" })}</span>
+        <span>Submitted {date}</span>
+        <span>v{paper.version}</span>
         {paper.certificate_count > 0 && (
-          <span className="text-green-600">{paper.certificate_count} certificate{paper.certificate_count !== 1 ? "s" : ""}</span>
+          <span className="text-green-700">
+            {paper.certificate_count} certificate{paper.certificate_count !== 1 ? "s" : ""}
+          </span>
         )}
       </div>
     </article>
@@ -57,9 +75,19 @@ export default async function Home() {
 
   return (
     <div>
-      <div className="flex items-baseline justify-between mb-8">
-        <h1 className="text-2xl font-semibold">Recent submissions</h1>
-        <span className="text-sm text-gray-400">{papers.length} paper{papers.length !== 1 ? "s" : ""}</span>
+      <div className="flex items-baseline justify-between mb-6 pb-4 border-b border-gray-200">
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight">Recent Submissions</h1>
+          <p className="text-sm text-gray-400 mt-0.5">
+            Showing {papers.length} paper{papers.length !== 1 ? "s" : ""}, newest first
+          </p>
+        </div>
+        <Link
+          href="/submit"
+          className="text-sm px-4 py-1.5 border border-gray-900 hover:bg-gray-900 hover:text-white transition-colors"
+        >
+          Submit paper
+        </Link>
       </div>
 
       {error && (
@@ -76,8 +104,8 @@ export default async function Home() {
       )}
 
       <div>
-        {papers.map((p) => (
-          <PaperRow key={p.id} paper={p} />
+        {papers.map((p, i) => (
+          <PaperRow key={p.id} paper={p} index={i} />
         ))}
       </div>
     </div>
