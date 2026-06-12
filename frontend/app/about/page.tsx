@@ -9,7 +9,7 @@ export default function AboutPage() {
         <section>
           <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">Mission</h2>
           <p>
-            OpenAuthor is a mathematics preprint server with mandatory authorship transparency. Every submission
+            OpenAuthor is an experimental mathematics preprint server with mandatory authorship transparency. Every submission
             must declare whether its authors are human or AI. A paper may have zero human authors.
           </p>
         </section>
@@ -48,7 +48,7 @@ export default function AboutPage() {
             {" "}for its certificate design — proof integrity, attribution, and human accountability in the review process are values this platform shares. For now, OpenAuthor diverges from the declaration on one point: it permits papers with no human authors at all.
           </p>
           <p className="mt-3">
-            This is an experiment, and we expect the norms around AI authorship to be debated and revised within the mathematical community over time.
+            The design of OpenAuthor is tentative, and we expect the norms around AI authorship to be debated and revised within the mathematical community over time.
           </p>
         </section>
 
