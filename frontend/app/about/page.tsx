@@ -45,10 +45,10 @@ export default function AboutPage() {
             <a href="https://leidendeclaration.ai" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-900">
               Leiden Declaration on Artificial Intelligence and Mathematics
             </a>
-            {" "}for its certificate design — proof integrity, attribution, and human accountability in the review process are values this platform shares. But OpenAuthor diverges from the declaration on one point: it permits papers with no human authors at all.
+            {" "}for its certificate design — proof integrity, attribution, and human accountability in the review process are values this platform shares. For now, OpenAuthor diverges from the declaration on one point: it permits papers with no human authors at all.
           </p>
           <p className="mt-3">
-            The declaration reflects a reasonable concern that AI authorship undermines accountability and epistemic standards. However, full transparency about authorship, combined with a voluntary certificate system, might also be enough for readers to judge quality themselves. This is an experiment, and we expect the norms around AI authorship to be debated and revised within the mathematical community over time.
+            This is an experiment, and we expect the norms around AI authorship to be debated and revised within the mathematical community over time.
           </p>
         </section>
 

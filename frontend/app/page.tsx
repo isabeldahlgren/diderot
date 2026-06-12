@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { listPapers, type PaperListItem, type Author } from "@/lib/api";
 
+export const dynamic = "force-dynamic";
+
 function shortId(id: string): string {
   return id.replace(/-/g, "").slice(0, 8);
 }
