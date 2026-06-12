@@ -1,5 +1,5 @@
 import uuid
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import Certificate, Paper, User
@@ -7,6 +7,14 @@ from app.schemas import UserPublic, PaperListItem
 from app.routers.papers import _to_list_item, _latest_only
 
 router = APIRouter(prefix="/api/v1/users", tags=["users"])
+
+
+@router.get("/lookup", response_model=UserPublic)
+def lookup_user_by_email(email: str = Query(...), db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == email.strip().lower()).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="No account found with that email")
+    return user
 
 
 @router.get("/{user_id}", response_model=UserPublic)

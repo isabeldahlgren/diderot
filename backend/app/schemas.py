@@ -13,6 +13,7 @@ class AuthorIn(BaseModel):
     model_version: Optional[str] = None
     provider: Optional[str] = None
     contribution: Optional[str] = None
+    user_id: Optional[uuid.UUID] = None
 
 
 class AuthorOut(AuthorIn):

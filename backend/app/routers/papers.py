@@ -94,11 +94,21 @@ async def create_paper(
 
     user_name_lower = current_user.name.strip().lower()
     for a in authors_data:
-        linked_user_id = (
-            current_user.id
-            if a["author_type"] == "human" and a["name"].strip().lower() == user_name_lower
-            else None
-        )
+        if a["author_type"] == "human":
+            provided_uid = a.get("user_id")
+            if provided_uid:
+                try:
+                    linked_user_id = uuid.UUID(str(provided_uid))
+                    if not db.query(User).filter(User.id == linked_user_id).first():
+                        linked_user_id = None
+                except (ValueError, AttributeError):
+                    linked_user_id = None
+            elif a["name"].strip().lower() == user_name_lower:
+                linked_user_id = current_user.id
+            else:
+                linked_user_id = None
+        else:
+            linked_user_id = None
         author = Author(
             paper_id=paper.id,
             name=a["name"],

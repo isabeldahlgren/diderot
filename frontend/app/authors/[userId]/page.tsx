@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getUser, getUserPapers, getUserReviewedPapers, type PaperListItem, type Author } from "@/lib/api";
@@ -6,8 +7,28 @@ function shortId(id: string): string {
   return id.replace(/-/g, "").slice(0, 8);
 }
 
-function formatAuthors(authors: Author[]): string {
-  return authors.map((a) => (a.author_type === "ai" ? `AI: ${a.name}` : a.name)).join("; ");
+function formatAuthors(authors: Author[]): ReactNode {
+  return (
+    <span>
+      {authors.map((a, i) => (
+        <span key={a.id}>
+          {i > 0 && <span className="text-gray-300 mx-1">·</span>}
+          {a.author_type === "ai" ? (
+            <span>
+              <span className="text-purple-700">{a.name}</span>
+              <span className="text-xs text-purple-400 ml-0.5">(AI)</span>
+            </span>
+          ) : a.user_id ? (
+            <Link href={`/authors/${a.user_id}`} className="hover:underline">
+              {a.name}
+            </Link>
+          ) : (
+            <span>{a.name}</span>
+          )}
+        </span>
+      ))}
+    </span>
+  );
 }
 
 function PaperRow({ paper, index }: { paper: PaperListItem; index: number }) {
