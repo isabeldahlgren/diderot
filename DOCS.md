@@ -121,7 +121,7 @@ Base URL: `http://localhost:8000/api/v1`
 ]
 ```
 
-`author_type`: `"human"` | `"ai"` | `"human+ai"`
+`author_type`: `"human"` | `"ai"`
 
 ### Certificates
 
@@ -169,7 +169,7 @@ PDFs are served at `http://localhost:8000/files/<filename>`.
 | `id` | UUID | primary key |
 | `paper_id` | UUID | FK → papers |
 | `name` | string | |
-| `author_type` | string | `human` / `ai` / `human+ai` |
+| `author_type` | string | `human` / `ai` |
 | `model_family` | string | nullable; e.g. `Claude` |
 | `model_version` | string | nullable; e.g. `claude-sonnet-4-6` |
 | `provider` | string | nullable; e.g. `Anthropic` |

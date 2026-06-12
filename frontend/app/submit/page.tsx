@@ -1,26 +1,65 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { submitPaper, type AuthorType, type Paper } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { CertificateModal } from "@/app/papers/[id]/CertificateSection";
 
-function StyledSelect({
-  className,
-  children,
-  ...props
-}: React.SelectHTMLAttributes<HTMLSelectElement>) {
+const AUTHOR_TYPE_OPTIONS = [
+  { value: "human", label: "human" },
+  { value: "ai", label: "AI" },
+];
+
+function CustomSelect({
+  value,
+  onChange,
+  options,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  options: { value: string; label: string }[];
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handleOutside);
+    return () => document.removeEventListener("mousedown", handleOutside);
+  }, []);
+
+  const selected = options.find((o) => o.value === value);
+
   return (
-    <div className="relative inline-block">
-      <select
-        className={`appearance-none border border-gray-300 px-3 py-1.5 pr-8 text-sm bg-white focus:outline-none focus:border-gray-500 cursor-pointer ${className ?? ""}`}
-        {...props}
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="border border-gray-300 px-3 py-1.5 text-sm bg-white focus:outline-none focus:border-gray-500 cursor-pointer flex items-center gap-2 whitespace-nowrap"
       >
-        {children}
-      </select>
-      <span className="pointer-events-none absolute inset-y-0 right-2.5 flex items-center text-gray-400 text-xs select-none">▾</span>
+        {selected?.label ?? value}
+        <span className="text-gray-400 text-xs select-none">▾</span>
+      </button>
+      {open && (
+        <div className="absolute z-10 top-full left-0 mt-0.5 border border-gray-300 bg-white shadow-sm min-w-full">
+          {options.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => { onChange(opt.value); setOpen(false); }}
+              className={`block w-full text-left px-3 py-1.5 text-sm hover:bg-gray-50 ${
+                opt.value === value ? "text-gray-900 font-medium" : "text-gray-600"
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -28,22 +67,16 @@ function StyledSelect({
 interface AuthorRow {
   name: string;
   author_type: AuthorType;
-  model_family: string;
-  model_version: string;
-  provider: string;
-  contribution: string;
+  model_id: string;
 }
 
 const emptyAuthor = (): AuthorRow => ({
   name: "",
   author_type: "human",
-  model_family: "",
-  model_version: "",
-  provider: "",
-  contribution: "",
+  model_id: "",
 });
 
-function AuthorRow({
+function AuthorRowItem({
   author,
   index,
   onChange,
@@ -68,14 +101,11 @@ function AuthorRow({
           onChange={(e) => onChange(index, "name", e.target.value)}
           required
         />
-        <StyledSelect
+        <CustomSelect
           value={author.author_type}
-          onChange={(e) => onChange(index, "author_type", e.target.value)}
-        >
-          <option value="human">human</option>
-          <option value="ai">AI</option>
-          <option value="human+ai">human+AI</option>
-        </StyledSelect>
+          onChange={(v) => onChange(index, "author_type", v)}
+          options={AUTHOR_TYPE_OPTIONS}
+        />
         {canRemove && (
           <button
             type="button"
@@ -86,27 +116,13 @@ function AuthorRow({
           </button>
         )}
       </div>
-      <input
-        className="w-full border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-500 mb-2"
-        placeholder="Contribution (e.g. proof search, draft writing)"
-        value={author.contribution}
-        onChange={(e) => onChange(index, "contribution", e.target.value)}
-      />
       {isAI && (
-        <div className="flex gap-3">
-          <input
-            className="flex-1 border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-500"
-            placeholder="Provider (e.g. Anthropic)"
-            value={author.provider}
-            onChange={(e) => onChange(index, "provider", e.target.value)}
-          />
-          <input
-            className="flex-1 border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-500"
-            placeholder="Model version (e.g. claude-sonnet-4-6)"
-            value={author.model_version}
-            onChange={(e) => onChange(index, "model_version", e.target.value)}
-          />
-        </div>
+        <input
+          className="w-full border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-500"
+          placeholder="Model ID (e.g. anthropic/claude-sonnet-4-6)"
+          value={author.model_id}
+          onChange={(e) => onChange(index, "model_id", e.target.value)}
+        />
       )}
     </div>
   );
@@ -149,14 +165,16 @@ export default function SubmitPage() {
         title,
         abstract,
         subject_area: subjectArea,
-        authors: authors.map((a) => ({
-          name: a.name,
-          author_type: a.author_type,
-          model_family: a.model_family || undefined,
-          model_version: a.model_version || undefined,
-          provider: a.provider || undefined,
-          contribution: a.contribution || undefined,
-        })),
+        authors: authors.map((a) => {
+          const slashIdx = a.model_id.indexOf("/");
+          const provider = slashIdx > -1 ? a.model_id.slice(0, slashIdx) : undefined;
+          return {
+            name: a.name,
+            author_type: a.author_type,
+            model_version: a.model_id || undefined,
+            provider,
+          };
+        }),
         pdf,
       });
       setSubmittedPaper(paper);
@@ -170,7 +188,7 @@ export default function SubmitPage() {
 
   if (submittedPaper) {
     const hasHumanAuthor = submittedPaper.authors.some(
-      (a) => a.author_type === "human" || a.author_type === "human+ai"
+      (a) => a.author_type === "human"
     );
     return (
       <div className="max-w-2xl">
@@ -247,7 +265,7 @@ export default function SubmitPage() {
         <div>
           <label className="block text-sm font-medium mb-2">Authors</label>
           {authors.map((a, i) => (
-            <AuthorRow
+            <AuthorRowItem
               key={i}
               author={a}
               index={i}

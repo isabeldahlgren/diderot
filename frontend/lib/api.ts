@@ -1,6 +1,6 @@
 const API = "http://localhost:8000/api/v1";
 
-export type AuthorType = "human" | "ai" | "human+ai";
+export type AuthorType = "human" | "ai";
 export type IssuerType = "self" | "human_reviewer";
 
 export interface Author {

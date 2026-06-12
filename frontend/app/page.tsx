@@ -13,16 +13,6 @@ function authorBadge(a: Author) {
       </span>
     );
   }
-  if (a.author_type === "human+ai") {
-    return (
-      <span
-        key={a.id}
-        className="inline-flex items-center text-xs px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200"
-      >
-        human+AI · {a.name}
-      </span>
-    );
-  }
   return (
     <span
       key={a.id}

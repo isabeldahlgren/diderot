@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
 
 const API = "http://localhost:8000/api/v1";
 
@@ -25,15 +25,15 @@ interface AuthContextValue extends AuthState {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<AuthState>(() => {
-    if (typeof window === "undefined") return { user: null, token: null };
+  const [state, setState] = useState<AuthState>({ user: null, token: null });
+
+  useEffect(() => {
     const token = localStorage.getItem("oa_token");
     const userRaw = localStorage.getItem("oa_user");
     if (token && userRaw) {
-      try { return { token, user: JSON.parse(userRaw) }; } catch {}
+      try { setState({ token, user: JSON.parse(userRaw) }); } catch {}
     }
-    return { user: null, token: null };
-  });
+  }, []);
 
   const login = useCallback(async (email: string, password: string) => {
     const res = await fetch(`${API}/auth/login`, {

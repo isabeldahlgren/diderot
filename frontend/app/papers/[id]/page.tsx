@@ -13,13 +13,6 @@ function AuthorBadge({ a }: { a: Author }) {
       </span>
     );
   }
-  if (a.author_type === "human+ai") {
-    return (
-      <span className="inline-flex items-center text-xs px-2 py-1 bg-blue-50 text-blue-700 border border-blue-200">
-        human+AI · {a.name}
-      </span>
-    );
-  }
   return (
     <span className="inline-flex items-center text-xs px-2 py-1 bg-gray-50 text-gray-700 border border-gray-200">
       {a.name}
@@ -36,9 +29,7 @@ export default async function PaperPage({ params }: { params: Promise<{ id: stri
     notFound();
   }
 
-  const hasHumanAuthor = paper.authors.some(
-    (a) => a.author_type === "human" || a.author_type === "human+ai"
-  );
+  const hasHumanAuthor = paper.authors.some((a) => a.author_type === "human");
 
   return (
     <div>

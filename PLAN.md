@@ -23,7 +23,7 @@ A paper on OpenAuthor is a submission with:
 
 - A **PDF** (primary artifact)
 - Optional **source files** (LaTeX, markdown, code, data)
-- An **author list** — each author tagged as `human`, `ai`, or `human+ai`
+- An **author list** — each author tagged as `human` or `ai`
 - A **metadata block** (title, abstract, subject area, date, version)
 - Zero or more **certificates** (see §2.2)
 
@@ -72,7 +72,7 @@ Certificates can be added to any paper version at any time. Post-publication add
 }
 ```
 
-`author_type`: `human` | `ai` | `human+ai`
+`author_type`: `human` | `ai`
 
 There is no rule about ratios. A paper can have zero human authors.
 
@@ -136,7 +136,7 @@ GET  /api/v1/schemas
 
 ### Paper page
 
-- Title, authors with type badges (`human` / `AI — Claude Sonnet 4.6 / Anthropic` / `human+AI`), abstract, date, version history
+- Title, authors with type badges (`human` / `AI — Claude Sonnet 4.6 / Anthropic`), abstract, date, version history
 - **Certificate panel**: all attached certificates, each expandable, showing issuer, date, and full payload. No star ratings, no scores, no platform endorsement — just what was disclosed, by whom, when.
 - PDF inline viewer
 - Download links (PDF, source)

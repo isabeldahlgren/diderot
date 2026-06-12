@@ -8,7 +8,7 @@ class AuthorIn(BaseModel):
     model_config = {"from_attributes": True, "protected_namespaces": ()}
 
     name: str
-    author_type: str  # "human" | "ai" | "human+ai"
+    author_type: str  # "human" | "ai"
     model_family: Optional[str] = None
     model_version: Optional[str] = None
     provider: Optional[str] = None

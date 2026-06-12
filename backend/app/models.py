@@ -41,7 +41,7 @@ class Author(Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     paper_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("papers.id"), nullable=False)
     name: Mapped[str] = mapped_column(String, nullable=False)
-    author_type: Mapped[str] = mapped_column(String, nullable=False)  # "human" | "ai" | "human+ai"
+    author_type: Mapped[str] = mapped_column(String, nullable=False)  # "human" | "ai"
     model_family: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     model_version: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     provider: Mapped[Optional[str]] = mapped_column(String, nullable=True)
