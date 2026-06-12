@@ -2,7 +2,7 @@ const API = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000") + "/api
 
 export type AuthorType = "human" | "ai";
 export type IssuerType = "self" | "human_reviewer";
-export type CertificateType = "ai_usage" | "peer_review" | "proof_verification" | "formal_verification" | "citation_check";
+export type CertificateType = "ai_usage" | "proof_verification" | "formal_verification" | "citation_check";
 
 export interface Author {
   id: string;
@@ -94,11 +94,6 @@ export async function getUserPapers(userId: string): Promise<PaperListItem[]> {
   return res.json();
 }
 
-export async function getUserReviews(userId: string): Promise<PaperListItem[]> {
-  const res = await fetch(`${API}/users/${userId}/reviews`);
-  if (!res.ok) throw new Error("Failed to fetch user reviews");
-  return res.json();
-}
 
 export async function submitPaper(data: {
   title: string;

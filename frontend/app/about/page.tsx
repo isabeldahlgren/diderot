@@ -22,7 +22,6 @@ export default function AboutPage() {
           </p>
           <ul className="mt-2 space-y-1 ml-4">
             <li><span className="font-medium">AI Tool Disclosure</span> — which AI tools were used and in what capacity (<a href="https://ai-cards.org" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-900">AI Cards</a> standard).</li>
-            <li><span className="font-medium">Peer Review</span> — external reviewer assessment of quality and soundness.</li>
             <li><span className="font-medium">Proof Verification</span> — a human attests to having read and verified the proofs.</li>
             <li><span className="font-medium">Formal Verification</span> — proofs formalised in a proof assistant (e.g. Lean 4) and checked by a human.</li>
             <li><span className="font-medium">Citation Check</span> — a human has verified that prior work is correctly cited.</li>

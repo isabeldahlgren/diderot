@@ -16,10 +16,6 @@ CERT_TYPE_META: dict[str, dict[str, str]] = {
         "issuer_name": "AI Tool Disclosure",
         "issuer_url": "https://ai-cards.org",
     },
-    "peer_review": {
-        "issuer_name": "Peer Review",
-        "issuer_url": "",
-    },
     "proof_verification": {
         "issuer_name": "Proof Verification",
         "issuer_url": "",

@@ -67,11 +67,6 @@ const CERT_TYPE_DEFS: Record<CertificateType, { label: string; description: stri
     description: "Discloses which AI tools were used and in what capacity",
     badgeColor: "bg-purple-50 text-purple-700 border-purple-200",
   },
-  peer_review: {
-    label: "Peer Review",
-    description: "An external reviewer attests to the quality and soundness of this work",
-    badgeColor: "bg-blue-50 text-blue-700 border-blue-200",
-  },
   proof_verification: {
     label: "Proof Verification",
     description: "A human attests to having read and verified the mathematical proofs",
@@ -144,23 +139,6 @@ function AiUsagePayloadView({ payload }: { payload: Record<string, unknown> }) {
   );
 }
 
-function PeerReviewPayloadView({ payload }: { payload: Record<string, unknown> }) {
-  const RECOMMENDATIONS: Record<string, string> = {
-    accept: "Accept",
-    accept_minor: "Accept with minor revisions",
-    accept_major: "Accept with major revisions",
-    reject: "Reject",
-  };
-  const rec = payload.recommendation as string | undefined;
-  return (
-    <div className="space-y-3">
-      {rec && <FieldRow label="Recommendation" value={RECOMMENDATIONS[rec] ?? rec} />}
-      {!!payload.summary && <FieldRow label="Summary" value={payload.summary as string} />}
-      {!!payload.comments && <FieldRow label="Comments" value={payload.comments as string} />}
-    </div>
-  );
-}
-
 function ProofVerificationPayloadView({ payload }: { payload: Record<string, unknown> }) {
   return (
     <div className="space-y-3">
@@ -203,7 +181,6 @@ function PayloadView({ cert }: { cert: Certificate }) {
   if (t === "ai_usage" || t === "ai-usage-cards") {
     return <AiUsagePayloadView payload={cert.payload} />;
   }
-  if (t === "peer_review") return <PeerReviewPayloadView payload={cert.payload} />;
   if (t === "proof_verification") return <ProofVerificationPayloadView payload={cert.payload} />;
   if (t === "formal_verification") return <FormalVerificationPayloadView payload={cert.payload} />;
   if (t === "citation_check") return <CitationCheckPayloadView payload={cert.payload} />;
@@ -447,61 +424,6 @@ function AiUsageForm({
   );
 }
 
-// ── Form: Peer Review ────────────────────────────────────────────────────────
-
-interface PeerReviewState {
-  recommendation: string;
-  summary: string;
-  comments: string;
-}
-
-function PeerReviewForm({
-  state,
-  onChange,
-}: {
-  state: PeerReviewState;
-  onChange: (s: PeerReviewState) => void;
-}) {
-  return (
-    <div className="space-y-4">
-      <div>
-        <label className="block text-xs font-medium mb-1">Recommendation</label>
-        <CustomSelect
-          value={state.recommendation}
-          onChange={(v) => onChange({ ...state, recommendation: v })}
-          options={[
-            { value: "accept", label: "Accept" },
-            { value: "accept_minor", label: "Accept with minor revisions" },
-            { value: "accept_major", label: "Accept with major revisions" },
-            { value: "reject", label: "Reject" },
-          ]}
-        />
-      </div>
-      <div>
-        <label className="block text-xs font-medium mb-1">Summary</label>
-        <textarea
-          className="w-full border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-gray-500 resize-none"
-          rows={3}
-          placeholder="Brief summary of the paper and its contributions"
-          value={state.summary}
-          onChange={(e) => onChange({ ...state, summary: e.target.value })}
-          required
-        />
-      </div>
-      <div>
-        <label className="block text-xs font-medium mb-1">Detailed comments</label>
-        <textarea
-          className="w-full border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-gray-500 resize-none"
-          rows={4}
-          placeholder="Strengths, weaknesses, and suggested revisions"
-          value={state.comments}
-          onChange={(e) => onChange({ ...state, comments: e.target.value })}
-        />
-      </div>
-    </div>
-  );
-}
-
 // ── Form: Proof Verification ────────────────────────────────────────────────
 
 interface ProofVerificationState {
@@ -676,11 +598,6 @@ export function CertificateModal({
     humanSections: "",
     notes: "",
   });
-  const [peerReview, setPeerReview] = useState<PeerReviewState>({
-    recommendation: "accept_minor",
-    summary: "",
-    comments: "",
-  });
   const [proofVerification, setProofVerification] = useState<ProofVerificationState>({
     scope: "",
     method: "line_by_line",
@@ -715,12 +632,6 @@ export function CertificateModal({
           ...(aiUsage.aiSections && { ai_generated_sections: splitLines(aiUsage.aiSections) }),
           ...(aiUsage.humanSections && { human_written_sections: splitLines(aiUsage.humanSections) }),
           ...(aiUsage.notes && { notes: aiUsage.notes }),
-        };
-      case "peer_review":
-        return {
-          recommendation: peerReview.recommendation,
-          ...(peerReview.summary && { summary: peerReview.summary }),
-          ...(peerReview.comments && { comments: peerReview.comments }),
         };
       case "proof_verification":
         return {
@@ -805,9 +716,6 @@ export function CertificateModal({
 
           {certType === "ai_usage" && (
             <AiUsageForm state={aiUsage} onChange={setAiUsage} />
-          )}
-          {certType === "peer_review" && (
-            <PeerReviewForm state={peerReview} onChange={setPeerReview} />
           )}
           {certType === "proof_verification" && (
             <ProofVerificationForm state={proofVerification} onChange={setProofVerification} />
