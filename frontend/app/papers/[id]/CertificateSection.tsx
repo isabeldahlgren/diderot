@@ -155,8 +155,8 @@ function PeerReviewPayloadView({ payload }: { payload: Record<string, unknown> }
   return (
     <div className="space-y-3">
       {rec && <FieldRow label="Recommendation" value={RECOMMENDATIONS[rec] ?? rec} />}
-      {payload.summary && <FieldRow label="Summary" value={payload.summary as string} />}
-      {payload.comments && <FieldRow label="Comments" value={payload.comments as string} />}
+      {!!payload.summary && <FieldRow label="Summary" value={payload.summary as string} />}
+      {!!payload.comments && <FieldRow label="Comments" value={payload.comments as string} />}
     </div>
   );
 }
@@ -164,9 +164,9 @@ function PeerReviewPayloadView({ payload }: { payload: Record<string, unknown> }
 function ProofVerificationPayloadView({ payload }: { payload: Record<string, unknown> }) {
   return (
     <div className="space-y-3">
-      {payload.scope && <FieldRow label="Scope" value={payload.scope as string} />}
-      {payload.method && <FieldRow label="Method" value={(payload.method as string).replace(/_/g, " ")} />}
-      {payload.notes && <FieldRow label="Notes" value={payload.notes as string} />}
+      {!!payload.scope && <FieldRow label="Scope" value={payload.scope as string} />}
+      {!!payload.method && <FieldRow label="Method" value={(payload.method as string).replace(/_/g, " ")} />}
+      {!!payload.notes && <FieldRow label="Notes" value={payload.notes as string} />}
     </div>
   );
 }
@@ -174,8 +174,8 @@ function ProofVerificationPayloadView({ payload }: { payload: Record<string, unk
 function FormalVerificationPayloadView({ payload }: { payload: Record<string, unknown> }) {
   return (
     <div className="space-y-3">
-      {payload.proof_assistant && <FieldRow label="Proof assistant" value={payload.proof_assistant as string} />}
-      {payload.repository_url && (
+      {!!payload.proof_assistant && <FieldRow label="Proof assistant" value={payload.proof_assistant as string} />}
+      {!!payload.repository_url && (
         <FieldRow
           label="Repository"
           value={
@@ -185,7 +185,7 @@ function FormalVerificationPayloadView({ payload }: { payload: Record<string, un
           }
         />
       )}
-      {payload.notes && <FieldRow label="Notes" value={payload.notes as string} />}
+      {!!payload.notes && <FieldRow label="Notes" value={payload.notes as string} />}
     </div>
   );
 }
@@ -193,7 +193,7 @@ function FormalVerificationPayloadView({ payload }: { payload: Record<string, un
 function CitationCheckPayloadView({ payload }: { payload: Record<string, unknown> }) {
   return (
     <div className="space-y-3">
-      {payload.notes && <FieldRow label="Notes" value={payload.notes as string} />}
+      {!!payload.notes && <FieldRow label="Notes" value={payload.notes as string} />}
     </div>
   );
 }
