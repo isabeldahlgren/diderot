@@ -82,6 +82,27 @@ Only humans can issue certificates (`issuer_type: "self"` = paper author; `"huma
 
 ---
 
+## About page references
+
+References on the About page are managed via `frontend/app/about/references.bib` (standard BibTeX). Citation numbers are assigned by order of appearance in that file.
+
+**To add a reference**, append an entry:
+```bibtex
+@misc{mykey,
+  author = {Last, First},
+  title  = {Title of the Work},
+  year   = {2025},
+  note   = {Talk, May 2, 2025},   % use for venue/type info
+  url    = {https://example.com},
+}
+```
+
+Use `@article` for journal papers (`journal = {...}` renders as the venue), `@misc` for everything else. Supported fields: `author`, `title`, `year`, `url`, `note`, `journal`, `booktitle`, `howpublished`.
+
+**To cite inline** in `page.tsx`, use `{c("mykey")}` — this renders a linked `[N]` that anchors to the references list. The `c` helper is defined at the top of `AboutPage` and looks up by cite key.
+
+---
+
 ## Resetting data for testing
 
 Delete all papers (cascades to authors + certificates):

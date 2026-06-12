@@ -225,3 +225,4 @@ This operationalises the "anyone can define a schema" principle in §2.2 and giv
 | M4 — Browse + Search | planned | Feed filters (§9.6), full-text search |
 | M5 — Principles + Docs | planned | `/principles` page (§10.2), `/api-docs` (§10.7), `/schemas` registry (§10.8) |
 | M6 — Trust signals | planned | ORCID on certificate issuers (§10.4), compute disclosure cert type (§10.5) |
+| M7 — Comments | planned | Per-paper discussion threads; authors and readers can post public comments |
