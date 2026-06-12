@@ -40,7 +40,7 @@ function CustomSelect({
         <span className="text-gray-400 text-xs select-none">▾</span>
       </button>
       {open && (
-        <div className="absolute z-10 top-full left-0 mt-0.5 border border-gray-300 bg-white shadow-sm min-w-full">
+        <div className="absolute z-10 top-full left-0 mt-0.5 border border-gray-300 bg-white shadow-sm min-w-full max-h-64 overflow-y-auto">
           {options.map((opt) => (
             <button
               key={opt.value}

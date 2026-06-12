@@ -12,14 +12,52 @@ const AUTHOR_TYPE_OPTIONS = [
   { value: "ai", label: "AI" },
 ];
 
+const SUBJECT_OPTIONS = [
+  { value: "", label: "Select a subject area" },
+  { value: "math.AG", label: "math.AG — Algebraic Geometry" },
+  { value: "math.AT", label: "math.AT — Algebraic Topology" },
+  { value: "math.AP", label: "math.AP — Analysis of PDEs" },
+  { value: "math.CT", label: "math.CT — Category Theory" },
+  { value: "math.CA", label: "math.CA — Classical Analysis and ODEs" },
+  { value: "math.CO", label: "math.CO — Combinatorics" },
+  { value: "math.AC", label: "math.AC — Commutative Algebra" },
+  { value: "math.CV", label: "math.CV — Complex Variables" },
+  { value: "math.DG", label: "math.DG — Differential Geometry" },
+  { value: "math.DS", label: "math.DS — Dynamical Systems" },
+  { value: "math.FA", label: "math.FA — Functional Analysis" },
+  { value: "math.GM", label: "math.GM — General Mathematics" },
+  { value: "math.GN", label: "math.GN — General Topology" },
+  { value: "math.GT", label: "math.GT — Geometric Topology" },
+  { value: "math.GR", label: "math.GR — Group Theory" },
+  { value: "math.HO", label: "math.HO — History and Overview" },
+  { value: "math.IT", label: "math.IT — Information Theory" },
+  { value: "math.KT", label: "math.KT — K-Theory and Homology" },
+  { value: "math.LO", label: "math.LO — Logic" },
+  { value: "math.MP", label: "math.MP — Mathematical Physics" },
+  { value: "math.MG", label: "math.MG — Metric Geometry" },
+  { value: "math.NT", label: "math.NT — Number Theory" },
+  { value: "math.NA", label: "math.NA — Numerical Analysis" },
+  { value: "math.OA", label: "math.OA — Operator Algebras" },
+  { value: "math.OC", label: "math.OC — Optimization and Control" },
+  { value: "math.PR", label: "math.PR — Probability" },
+  { value: "math.QA", label: "math.QA — Quantum Algebra" },
+  { value: "math.RT", label: "math.RT — Representation Theory" },
+  { value: "math.RA", label: "math.RA — Rings and Algebras" },
+  { value: "math.SP", label: "math.SP — Spectral Theory" },
+  { value: "math.ST", label: "math.ST — Statistics Theory" },
+  { value: "math.SG", label: "math.SG — Symplectic Geometry" },
+];
+
 function CustomSelect({
   value,
   onChange,
   options,
+  fullWidth,
 }: {
   value: string;
   onChange: (v: string) => void;
   options: { value: string; label: string }[];
+  fullWidth?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -35,17 +73,17 @@ function CustomSelect({
   const selected = options.find((o) => o.value === value);
 
   return (
-    <div className="relative" ref={ref}>
+    <div className={`relative${fullWidth ? " w-full" : ""}`} ref={ref}>
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="border border-gray-300 px-3 py-1.5 text-sm bg-white focus:outline-none focus:border-gray-500 cursor-pointer flex items-center gap-2 whitespace-nowrap"
+        className={`border border-gray-300 px-3 py-1.5 text-sm bg-white focus:outline-none focus:border-gray-500 cursor-pointer flex items-center gap-2 whitespace-nowrap${fullWidth ? " w-full justify-between" : ""}`}
       >
-        {selected?.label ?? value}
-        <span className="text-gray-400 text-xs select-none">▾</span>
+        <span className={!selected || selected.value === "" ? "text-gray-400" : ""}>{selected?.label ?? value}</span>
+        <span className="text-gray-400 text-xs select-none flex-shrink-0">▾</span>
       </button>
       {open && (
-        <div className="absolute z-10 top-full left-0 mt-0.5 border border-gray-300 bg-white shadow-sm min-w-full">
+        <div className="absolute z-10 top-full left-0 mt-0.5 border border-gray-300 bg-white shadow-sm min-w-full max-h-64 overflow-y-auto">
           {options.map((opt) => (
             <button
               key={opt.value}
@@ -192,6 +230,7 @@ function SubmitPageInner() {
     e.preventDefault();
     if (!pdf) { setError("Please select a PDF file."); return; }
     if (!token) { setError("Not authenticated. Please sign in again."); return; }
+    if (!subjectArea) { setError("Please select a subject area."); return; }
     if (!authors.some((a) => a.author_type === "human")) {
       setError("At least one human author is required. The submitting account must be listed as a human author.");
       return;
@@ -311,46 +350,12 @@ function SubmitPageInner() {
 
         <div>
           <label className="block text-sm font-medium mb-1">Subject area</label>
-          <select
-            className="w-full border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-gray-500 bg-white"
+          <CustomSelect
             value={subjectArea}
-            onChange={(e) => setSubjectArea(e.target.value)}
-            required
-          >
-            <option value="">Select a subject area</option>
-            <option value="math.AG">math.AG — Algebraic Geometry</option>
-            <option value="math.AT">math.AT — Algebraic Topology</option>
-            <option value="math.AP">math.AP — Analysis of PDEs</option>
-            <option value="math.CT">math.CT — Category Theory</option>
-            <option value="math.CA">math.CA — Classical Analysis and ODEs</option>
-            <option value="math.CO">math.CO — Combinatorics</option>
-            <option value="math.AC">math.AC — Commutative Algebra</option>
-            <option value="math.CV">math.CV — Complex Variables</option>
-            <option value="math.DG">math.DG — Differential Geometry</option>
-            <option value="math.DS">math.DS — Dynamical Systems</option>
-            <option value="math.FA">math.FA — Functional Analysis</option>
-            <option value="math.GM">math.GM — General Mathematics</option>
-            <option value="math.GN">math.GN — General Topology</option>
-            <option value="math.GT">math.GT — Geometric Topology</option>
-            <option value="math.GR">math.GR — Group Theory</option>
-            <option value="math.HO">math.HO — History and Overview</option>
-            <option value="math.IT">math.IT — Information Theory</option>
-            <option value="math.KT">math.KT — K-Theory and Homology</option>
-            <option value="math.LO">math.LO — Logic</option>
-            <option value="math.MP">math.MP — Mathematical Physics</option>
-            <option value="math.MG">math.MG — Metric Geometry</option>
-            <option value="math.NT">math.NT — Number Theory</option>
-            <option value="math.NA">math.NA — Numerical Analysis</option>
-            <option value="math.OA">math.OA — Operator Algebras</option>
-            <option value="math.OC">math.OC — Optimization and Control</option>
-            <option value="math.PR">math.PR — Probability</option>
-            <option value="math.QA">math.QA — Quantum Algebra</option>
-            <option value="math.RT">math.RT — Representation Theory</option>
-            <option value="math.RA">math.RA — Rings and Algebras</option>
-            <option value="math.SP">math.SP — Spectral Theory</option>
-            <option value="math.ST">math.ST — Statistics Theory</option>
-            <option value="math.SG">math.SG — Symplectic Geometry</option>
-          </select>
+            onChange={setSubjectArea}
+            options={SUBJECT_OPTIONS}
+            fullWidth
+          />
         </div>
 
         <div>
