@@ -92,24 +92,33 @@ export default function AboutPage() {
         <section id="references">
           <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">References</h2>
           <ol className="space-y-2">
-            {refs.map((ref, i) => (
-              <li key={ref.key} id={`ref-${i + 1}`} className="flex gap-2.5">
-                <span className="text-gray-400 shrink-0 tabular-nums">[{i + 1}]</span>
-                <span>
-                  {ref.author && <>{ref.author}. </>}
-                  {ref.url ? (
-                    <a href={ref.url} target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-900">
-                      {ref.title}
-                    </a>
-                  ) : (
-                    ref.title
-                  )}
-                  {ref.venue && <>. <span className="italic">{ref.venue}</span></>}
-                  {ref.year && !ref.venue && <>. {ref.year}</>}
-                  {"."}
-                </span>
-              </li>
-            ))}
+            {refs.map((ref, i) => {
+              const italicTitle = ref.type !== "article";
+              const titleNode = italicTitle ? <em>{ref.title}</em> : <>{ref.title}</>;
+              return (
+                <li key={ref.key} id={`ref-${i + 1}`} className="flex gap-2.5">
+                  <span className="text-gray-400 shrink-0 tabular-nums">[{i + 1}]</span>
+                  <span>
+                    {ref.author && <>{ref.author}, </>}
+                    {ref.url ? (
+                      <a href={ref.url} target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-900">
+                        {titleNode}
+                      </a>
+                    ) : titleNode}
+                    {ref.venue && (
+                      ref.type === "article"
+                        ? <>, <em>{ref.venue}</em></>
+                        : <>, {ref.venue}</>
+                    )}
+                    {ref.year && <>, {ref.month ? `${ref.month} ` : ""}{ref.year}</>}
+                    {ref.doi && (
+                      <>, <a href={`https://doi.org/${ref.doi}`} target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-900">doi:{ref.doi}</a></>
+                    )}
+                    {"."}
+                  </span>
+                </li>
+              );
+            })}
           </ol>
         </section>
       </div>
