@@ -296,13 +296,46 @@ function SubmitPageInner() {
 
         <div>
           <label className="block text-sm font-medium mb-1">Subject area</label>
-          <input
-            className="w-full border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-gray-500"
-            placeholder="e.g. Mathematics, Computer Science, Biology"
+          <select
+            className="w-full border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-gray-500 bg-white"
             value={subjectArea}
             onChange={(e) => setSubjectArea(e.target.value)}
             required
-          />
+          >
+            <option value="">Select a subject area</option>
+            <option value="math.AG">math.AG — Algebraic Geometry</option>
+            <option value="math.AT">math.AT — Algebraic Topology</option>
+            <option value="math.AP">math.AP — Analysis of PDEs</option>
+            <option value="math.CT">math.CT — Category Theory</option>
+            <option value="math.CA">math.CA — Classical Analysis and ODEs</option>
+            <option value="math.CO">math.CO — Combinatorics</option>
+            <option value="math.AC">math.AC — Commutative Algebra</option>
+            <option value="math.CV">math.CV — Complex Variables</option>
+            <option value="math.DG">math.DG — Differential Geometry</option>
+            <option value="math.DS">math.DS — Dynamical Systems</option>
+            <option value="math.FA">math.FA — Functional Analysis</option>
+            <option value="math.GM">math.GM — General Mathematics</option>
+            <option value="math.GN">math.GN — General Topology</option>
+            <option value="math.GT">math.GT — Geometric Topology</option>
+            <option value="math.GR">math.GR — Group Theory</option>
+            <option value="math.HO">math.HO — History and Overview</option>
+            <option value="math.IT">math.IT — Information Theory</option>
+            <option value="math.KT">math.KT — K-Theory and Homology</option>
+            <option value="math.LO">math.LO — Logic</option>
+            <option value="math.MP">math.MP — Mathematical Physics</option>
+            <option value="math.MG">math.MG — Metric Geometry</option>
+            <option value="math.NT">math.NT — Number Theory</option>
+            <option value="math.NA">math.NA — Numerical Analysis</option>
+            <option value="math.OA">math.OA — Operator Algebras</option>
+            <option value="math.OC">math.OC — Optimization and Control</option>
+            <option value="math.PR">math.PR — Probability</option>
+            <option value="math.QA">math.QA — Quantum Algebra</option>
+            <option value="math.RT">math.RT — Representation Theory</option>
+            <option value="math.RA">math.RA — Rings and Algebras</option>
+            <option value="math.SP">math.SP — Spectral Theory</option>
+            <option value="math.ST">math.ST — Statistics Theory</option>
+            <option value="math.SG">math.SG — Symplectic Geometry</option>
+          </select>
         </div>
 
         <div>

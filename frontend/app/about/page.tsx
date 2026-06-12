@@ -9,9 +9,8 @@ export default function AboutPage() {
         <section>
           <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">Mission</h2>
           <p>
-            OpenAuthor is a preprint server with mandatory authorship transparency. Every submission
-            must declare whether its authors are human, AI, or both — with no editorial gatekeeping
-            on author composition. A paper may have zero human authors.
+            OpenAuthor is a mathematics preprint server with mandatory authorship transparency. Every submission
+            must declare whether its authors are human, AI, or both. A paper may have zero human authors.
           </p>
         </section>
 
@@ -30,7 +29,6 @@ export default function AboutPage() {
         <section>
           <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">Principles</h2>
           <ul className="space-y-1 ml-4">
-            <li>No editorial gatekeeping — any paper may be submitted.</li>
             <li>Mandatory authorship transparency — author types must be declared.</li>
             <li>Only humans may issue certificates — AI agents cannot self-certify.</li>
             <li>Open access — all papers are freely available.</li>
