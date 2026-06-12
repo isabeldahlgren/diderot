@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getUser, getUserPapers, type PaperListItem, type Author } from "@/lib/api";
+import { getUser, getUserPapers, getUserReviews, type PaperListItem, type Author } from "@/lib/api";
 
 function shortId(id: string): string {
   return id.replace(/-/g, "").slice(0, 8);
@@ -50,9 +50,14 @@ export default async function AuthorPage({ params }: { params: Promise<{ userId:
 
   let user;
   let papers: PaperListItem[] = [];
+  let reviews: PaperListItem[] = [];
 
   try {
-    [user, papers] = await Promise.all([getUser(userId), getUserPapers(userId)]);
+    [user, papers, reviews] = await Promise.all([
+      getUser(userId),
+      getUserPapers(userId),
+      getUserReviews(userId),
+    ]);
   } catch {
     notFound();
   }
@@ -74,10 +79,26 @@ export default async function AuthorPage({ params }: { params: Promise<{ userId:
       </div>
 
       {papers.length === 0 ? (
-        <p className="text-sm text-gray-500">No papers submitted yet.</p>
+        <p className="text-sm text-gray-500 mb-10">No papers submitted yet.</p>
+      ) : (
+        <div className="mb-10">
+          {papers.map((p, i) => (
+            <PaperRow key={p.id} paper={p} index={i} />
+          ))}
+        </div>
+      )}
+
+      <div className="mb-4 border-t border-gray-200 pt-8">
+        <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+          Peer reviews — {reviews.length} paper{reviews.length !== 1 ? "s" : ""}
+        </h2>
+      </div>
+
+      {reviews.length === 0 ? (
+        <p className="text-sm text-gray-500">No peer reviews yet.</p>
       ) : (
         <div>
-          {papers.map((p, i) => (
+          {reviews.map((p, i) => (
             <PaperRow key={p.id} paper={p} index={i} />
           ))}
         </div>
