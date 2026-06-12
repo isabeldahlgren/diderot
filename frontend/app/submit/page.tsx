@@ -159,6 +159,7 @@ export default function SubmitPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!pdf) { setError("Please select a PDF file."); return; }
+    if (!token) { setError("Not authenticated. Please sign in again."); return; }
 
     setSubmitting(true);
     setError("");
@@ -179,6 +180,7 @@ export default function SubmitPage() {
           };
         }),
         pdf,
+        token,
       });
       setSubmittedPaper(paper);
     } catch (err) {

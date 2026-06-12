@@ -11,6 +11,14 @@ load_dotenv()
 
 Base.metadata.create_all(bind=engine)
 
+with engine.connect() as conn:
+    conn.execute(
+        __import__("sqlalchemy").text(
+            "ALTER TABLE certificates ADD COLUMN IF NOT EXISTS version INTEGER NOT NULL DEFAULT 1"
+        )
+    )
+    conn.commit()
+
 app = FastAPI(title="OpenAuthor API")
 
 app.add_middleware(

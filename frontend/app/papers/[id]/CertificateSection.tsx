@@ -250,6 +250,9 @@ function CertificateCard({ cert }: { cert: Certificate }) {
         <div className="flex items-center gap-3 flex-wrap">
           <span className={`text-xs px-2 py-0.5 border ${badgeColor}`}>
             {certTypeLabel(cert.certificate_type)}
+            {cert.version > 1 && (
+              <span className="ml-1 font-mono text-[10px] opacity-70">v{cert.version}</span>
+            )}
           </span>
           <span className="text-xs text-gray-500">{issuerLabel}</span>
         </div>

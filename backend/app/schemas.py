@@ -37,6 +37,7 @@ class CertificateOut(BaseModel):
     issuer_display_name: Optional[str] = None
     issued_at: datetime
     payload: dict[str, Any]
+    version: int = 1
 
     model_config = {"from_attributes": True}
 

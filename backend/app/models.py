@@ -67,6 +67,7 @@ class Certificate(Base):
     issuer_display_name: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     issued_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     payload: Mapped[dict] = mapped_column(JSON, nullable=False)
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1, server_default="1")
 
     paper: Mapped["Paper"] = relationship("Paper", back_populates="certificates")
     issuer_user: Mapped[Optional["User"]] = relationship("User", back_populates="certificates")

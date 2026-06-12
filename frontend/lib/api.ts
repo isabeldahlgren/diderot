@@ -26,6 +26,7 @@ export interface Certificate {
   issuer_display_name?: string;
   issued_at: string;
   payload: Record<string, unknown>;
+  version: number;
 }
 
 export interface Paper {
@@ -70,6 +71,7 @@ export async function submitPaper(data: {
   subject_area: string;
   authors: Omit<Author, "id" | "paper_id">[];
   pdf: File;
+  token: string;
 }): Promise<Paper> {
   const form = new FormData();
   form.append("title", data.title);
@@ -78,7 +80,11 @@ export async function submitPaper(data: {
   form.append("authors", JSON.stringify(data.authors));
   form.append("pdf", data.pdf);
 
-  const res = await fetch(`${API}/papers`, { method: "POST", body: form });
+  const res = await fetch(`${API}/papers`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${data.token}` },
+    body: form,
+  });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.detail ?? "Submission failed");

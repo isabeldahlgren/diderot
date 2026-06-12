@@ -1,5 +1,6 @@
 import uuid
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import Paper, Certificate, User
@@ -53,6 +54,12 @@ def add_certificate(
     if cert_in.issuer_type == "self" and paper.submitter_user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Only the paper's submitter can add a self-issued certificate")
 
+    max_version = (
+        db.query(func.max(Certificate.version))
+        .filter(Certificate.paper_id == paper_id, Certificate.certificate_type == cert_in.certificate_type)
+        .scalar()
+    ) or 0
+
     meta = CERT_TYPE_META[cert_in.certificate_type]
     cert = Certificate(
         paper_id=paper_id,
@@ -63,6 +70,7 @@ def add_certificate(
         issuer_user_id=current_user.id,
         issuer_display_name=current_user.name,
         payload=cert_in.payload,
+        version=max_version + 1,
     )
     db.add(cert)
     db.commit()
