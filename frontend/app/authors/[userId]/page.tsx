@@ -95,7 +95,7 @@ export default async function AuthorPage({ params }: { params: Promise<{ userId:
 
       <div className="mb-4">
         <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400">
-          Submissions — {papers.length} paper{papers.length !== 1 ? "s" : ""}
+          Papers — {papers.length} paper{papers.length !== 1 ? "s" : ""}
         </h2>
       </div>
 

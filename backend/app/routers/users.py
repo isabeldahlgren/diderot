@@ -2,7 +2,8 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.models import Certificate, Paper, User
+from sqlalchemy import or_
+from app.models import Author, Certificate, Paper, User
 from app.schemas import UserPublic, PaperListItem
 from app.routers.papers import _to_list_item, _latest_only
 
@@ -30,7 +31,10 @@ def get_user_papers(user_id: uuid.UUID, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    base = db.query(Paper).filter(Paper.submitter_user_id == user_id).order_by(Paper.created_at.desc())
+    authored_ids = db.query(Author.paper_id).filter(Author.user_id == user_id).subquery()
+    base = db.query(Paper).filter(
+        or_(Paper.submitter_user_id == user_id, Paper.id.in_(authored_ids))
+    ).order_by(Paper.created_at.desc())
     papers = _latest_only(base, db).all()
     return [_to_list_item(p) for p in papers]
 
