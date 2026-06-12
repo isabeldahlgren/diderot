@@ -63,14 +63,29 @@ function CustomSelect({
 
 const CERT_TYPE_DEFS: Record<CertificateType, { label: string; description: string; badgeColor: string }> = {
   ai_usage: {
-    label: "AI Authorship Disclosure",
-    description: "Discloses AI model usage in authoring this paper",
+    label: "AI Tool Disclosure",
+    description: "Discloses which AI tools were used and in what capacity",
     badgeColor: "bg-purple-50 text-purple-700 border-purple-200",
   },
   peer_review: {
     label: "Peer Review",
     description: "An external reviewer attests to the quality and soundness of this work",
     badgeColor: "bg-blue-50 text-blue-700 border-blue-200",
+  },
+  proof_verification: {
+    label: "Proof Verification",
+    description: "A human attests to having read and verified the mathematical proofs",
+    badgeColor: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  },
+  formal_verification: {
+    label: "Formal Verification",
+    description: "The proofs have been formalised in a proof assistant; the statement has been checked by a human",
+    badgeColor: "bg-teal-50 text-teal-700 border-teal-200",
+  },
+  citation_check: {
+    label: "Citation Check",
+    description: "A human has verified that prior work is correctly identified and cited",
+    badgeColor: "bg-orange-50 text-orange-700 border-orange-200",
   },
 };
 
@@ -146,12 +161,52 @@ function PeerReviewPayloadView({ payload }: { payload: Record<string, unknown> }
   );
 }
 
+function ProofVerificationPayloadView({ payload }: { payload: Record<string, unknown> }) {
+  return (
+    <div className="space-y-3">
+      {payload.scope && <FieldRow label="Scope" value={payload.scope as string} />}
+      {payload.method && <FieldRow label="Method" value={(payload.method as string).replace(/_/g, " ")} />}
+      {payload.notes && <FieldRow label="Notes" value={payload.notes as string} />}
+    </div>
+  );
+}
+
+function FormalVerificationPayloadView({ payload }: { payload: Record<string, unknown> }) {
+  return (
+    <div className="space-y-3">
+      {payload.proof_assistant && <FieldRow label="Proof assistant" value={payload.proof_assistant as string} />}
+      {payload.repository_url && (
+        <FieldRow
+          label="Repository"
+          value={
+            <a href={payload.repository_url as string} target="_blank" rel="noopener noreferrer" className="underline text-blue-700">
+              {payload.repository_url as string}
+            </a>
+          }
+        />
+      )}
+      {payload.notes && <FieldRow label="Notes" value={payload.notes as string} />}
+    </div>
+  );
+}
+
+function CitationCheckPayloadView({ payload }: { payload: Record<string, unknown> }) {
+  return (
+    <div className="space-y-3">
+      {payload.notes && <FieldRow label="Notes" value={payload.notes as string} />}
+    </div>
+  );
+}
+
 function PayloadView({ cert }: { cert: Certificate }) {
   const t = cert.certificate_type;
   if (t === "ai_usage" || t === "ai-usage-cards") {
     return <AiUsagePayloadView payload={cert.payload} />;
   }
   if (t === "peer_review") return <PeerReviewPayloadView payload={cert.payload} />;
+  if (t === "proof_verification") return <ProofVerificationPayloadView payload={cert.payload} />;
+  if (t === "formal_verification") return <FormalVerificationPayloadView payload={cert.payload} />;
+  if (t === "citation_check") return <CitationCheckPayloadView payload={cert.payload} />;
   return (
     <pre className="text-xs text-gray-700 overflow-auto bg-gray-50 p-3 leading-relaxed">
       {JSON.stringify(cert.payload, null, 2)}
@@ -447,6 +502,147 @@ function PeerReviewForm({
   );
 }
 
+// ── Form: Proof Verification ────────────────────────────────────────────────
+
+interface ProofVerificationState {
+  scope: string;
+  method: string;
+  notes: string;
+}
+
+function ProofVerificationForm({
+  state,
+  onChange,
+}: {
+  state: ProofVerificationState;
+  onChange: (s: ProofVerificationState) => void;
+}) {
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="block text-xs font-medium mb-1">Scope</label>
+        <input
+          className="w-full border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-500"
+          placeholder="e.g. all proofs, main theorem, Lemma 2.3"
+          value={state.scope}
+          onChange={(e) => onChange({ ...state, scope: e.target.value })}
+          required
+        />
+      </div>
+      <div>
+        <label className="block text-xs font-medium mb-1">Method</label>
+        <CustomSelect
+          value={state.method}
+          onChange={(v) => onChange({ ...state, method: v })}
+          options={[
+            { value: "line_by_line", label: "Line by line" },
+            { value: "high_level", label: "High level" },
+            { value: "partial", label: "Partial" },
+            { value: "other", label: "Other" },
+          ]}
+        />
+      </div>
+      <div>
+        <label className="block text-xs font-medium mb-1">Notes</label>
+        <textarea
+          className="w-full border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-gray-500 resize-none"
+          rows={2}
+          placeholder="Any caveats or additional context"
+          value={state.notes}
+          onChange={(e) => onChange({ ...state, notes: e.target.value })}
+        />
+      </div>
+    </div>
+  );
+}
+
+// ── Form: Formal Verification ────────────────────────────────────────────────
+
+interface FormalVerificationState {
+  proof_assistant: string;
+  repository_url: string;
+  notes: string;
+}
+
+function FormalVerificationForm({
+  state,
+  onChange,
+}: {
+  state: FormalVerificationState;
+  onChange: (s: FormalVerificationState) => void;
+}) {
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="block text-xs font-medium mb-1">Proof assistant</label>
+        <CustomSelect
+          value={state.proof_assistant}
+          onChange={(v) => onChange({ ...state, proof_assistant: v })}
+          options={[
+            { value: "Lean 4", label: "Lean 4" },
+            { value: "Lean 3", label: "Lean 3" },
+            { value: "Coq", label: "Coq" },
+            { value: "Isabelle", label: "Isabelle/HOL" },
+            { value: "Agda", label: "Agda" },
+            { value: "Other", label: "Other" },
+          ]}
+        />
+      </div>
+      <div>
+        <label className="block text-xs font-medium mb-1">Repository URL</label>
+        <input
+          type="url"
+          className="w-full border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-500"
+          placeholder="https://github.com/..."
+          value={state.repository_url}
+          onChange={(e) => onChange({ ...state, repository_url: e.target.value })}
+          required
+        />
+      </div>
+      <div>
+        <label className="block text-xs font-medium mb-1">Notes</label>
+        <textarea
+          className="w-full border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-gray-500 resize-none"
+          rows={2}
+          placeholder="e.g. which theorems are formalised, any gaps"
+          value={state.notes}
+          onChange={(e) => onChange({ ...state, notes: e.target.value })}
+        />
+      </div>
+    </div>
+  );
+}
+
+// ── Form: Citation Check ─────────────────────────────────────────────────────
+
+interface CitationCheckState {
+  notes: string;
+}
+
+function CitationCheckForm({
+  state,
+  onChange,
+}: {
+  state: CitationCheckState;
+  onChange: (s: CitationCheckState) => void;
+}) {
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="block text-xs font-medium mb-1">Notes</label>
+        <textarea
+          className="w-full border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-gray-500 resize-none"
+          rows={4}
+          placeholder="Describe what was checked and any corrections or additions made to the bibliography"
+          value={state.notes}
+          onChange={(e) => onChange({ ...state, notes: e.target.value })}
+          required
+        />
+      </div>
+    </div>
+  );
+}
+
 // ── Certificate modal ────────────────────────────────────────────────────────
 
 function splitLines(s: string): string[] {
@@ -485,6 +681,19 @@ export function CertificateModal({
     summary: "",
     comments: "",
   });
+  const [proofVerification, setProofVerification] = useState<ProofVerificationState>({
+    scope: "",
+    method: "line_by_line",
+    notes: "",
+  });
+  const [formalVerification, setFormalVerification] = useState<FormalVerificationState>({
+    proof_assistant: "Lean 4",
+    repository_url: "",
+    notes: "",
+  });
+  const [citationCheck, setCitationCheck] = useState<CitationCheckState>({
+    notes: "",
+  });
   const close = useCallback(() => onClose(), [onClose]);
 
   useEffect(() => {
@@ -512,6 +721,22 @@ export function CertificateModal({
           recommendation: peerReview.recommendation,
           ...(peerReview.summary && { summary: peerReview.summary }),
           ...(peerReview.comments && { comments: peerReview.comments }),
+        };
+      case "proof_verification":
+        return {
+          scope: proofVerification.scope,
+          method: proofVerification.method,
+          ...(proofVerification.notes && { notes: proofVerification.notes }),
+        };
+      case "formal_verification":
+        return {
+          proof_assistant: formalVerification.proof_assistant,
+          repository_url: formalVerification.repository_url,
+          ...(formalVerification.notes && { notes: formalVerification.notes }),
+        };
+      case "citation_check":
+        return {
+          notes: citationCheck.notes,
         };
     }
   }
@@ -583,6 +808,15 @@ export function CertificateModal({
           )}
           {certType === "peer_review" && (
             <PeerReviewForm state={peerReview} onChange={setPeerReview} />
+          )}
+          {certType === "proof_verification" && (
+            <ProofVerificationForm state={proofVerification} onChange={setProofVerification} />
+          )}
+          {certType === "formal_verification" && (
+            <FormalVerificationForm state={formalVerification} onChange={setFormalVerification} />
+          )}
+          {certType === "citation_check" && (
+            <CitationCheckForm state={citationCheck} onChange={setCitationCheck} />
           )}
           {error && <p className="text-xs text-red-500">{error}</p>}
 

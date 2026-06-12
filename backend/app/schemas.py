@@ -22,7 +22,7 @@ class AuthorOut(AuthorIn):
 
 
 class CertificateIn(BaseModel):
-    certificate_type: str = "ai_usage"  # "ai_usage" | "peer_review"
+    certificate_type: str = "ai_usage"  # "ai_usage" | "peer_review" | "proof_verification" | "formal_verification" | "citation_check"
     issuer_type: str  # "self" | "human_reviewer"
     payload: dict[str, Any]
 

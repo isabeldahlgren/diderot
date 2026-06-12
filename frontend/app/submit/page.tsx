@@ -142,6 +142,17 @@ function SubmitPageInner() {
   const [abstract, setAbstract] = useState("");
   const [subjectArea, setSubjectArea] = useState("");
   const [authors, setAuthors] = useState<AuthorRow[]>([emptyAuthor()]);
+
+  useEffect(() => {
+    if (user && !parentId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setAuthors((prev) =>
+        prev.length === 1 && !prev[0].name
+          ? [{ name: user.name, author_type: "human", model_id: "" }]
+          : prev
+      );
+    }
+  }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   const [pdf, setPdf] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -181,6 +192,10 @@ function SubmitPageInner() {
     e.preventDefault();
     if (!pdf) { setError("Please select a PDF file."); return; }
     if (!token) { setError("Not authenticated. Please sign in again."); return; }
+    if (!authors.some((a) => a.author_type === "human")) {
+      setError("At least one human author is required. The submitting account must be listed as a human author.");
+      return;
+    }
 
     setSubmitting(true);
     setError("");
@@ -230,7 +245,7 @@ function SubmitPageInner() {
             onClick={() => setCertModalOpen(true)}
             className="text-sm px-4 py-1.5 border border-gray-900 hover:bg-gray-900 hover:text-white transition-colors"
           >
-            + add AI disclosure certificate
+            + add AI tool disclosure certificate
           </button>
           <Link
             href={`/papers/${submittedPaper.id}`}
