@@ -20,11 +20,11 @@ export default function NavHeader() {
             <Link href="/submit" className="hover:text-gray-900 transition-colors">
               Submit
             </Link>
-            <Link href="/principles" className="hover:text-gray-900 transition-colors">
-              Principles
-            </Link>
             <Link href="/about" className="hover:text-gray-900 transition-colors">
               About
+            </Link>
+            <Link href="/principles" className="hover:text-gray-900 transition-colors">
+              Principles
             </Link>
           </nav>
         </div>
