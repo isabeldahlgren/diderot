@@ -76,6 +76,21 @@ class PaperListItem(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class CommentIn(BaseModel):
+    body: str
+
+
+class CommentOut(BaseModel):
+    id: uuid.UUID
+    paper_id: uuid.UUID
+    author_user_id: Optional[uuid.UUID] = None
+    author_name: str
+    body: str
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
 class UserRegister(BaseModel):
     email: str
     name: str

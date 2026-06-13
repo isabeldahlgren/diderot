@@ -107,6 +107,34 @@ export async function getUserReviewedPapers(userId: string): Promise<PaperListIt
 }
 
 
+export interface Comment {
+  id: string;
+  paper_id: string;
+  author_user_id?: string;
+  author_name: string;
+  body: string;
+  created_at: string;
+}
+
+export async function getComments(paperId: string): Promise<Comment[]> {
+  const res = await fetch(`${API}/papers/${paperId}/comments`);
+  if (!res.ok) throw new Error("Failed to fetch comments");
+  return res.json();
+}
+
+export async function addComment(paperId: string, body: string, token: string): Promise<Comment> {
+  const res = await fetch(`${API}/papers/${paperId}/comments`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ body }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail ?? "Failed to post comment");
+  }
+  return res.json();
+}
+
 export async function submitPaper(data: {
   title: string;
   abstract: string;

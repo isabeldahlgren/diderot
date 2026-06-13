@@ -6,7 +6,7 @@ from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 from sqlalchemy import text
 from app.database import engine, Base
-from app.routers import papers, certificates, auth, users
+from app.routers import papers, certificates, auth, users, comments
 
 load_dotenv()
 
@@ -50,3 +50,4 @@ app.include_router(papers.router)
 app.include_router(certificates.router)
 app.include_router(auth.router)
 app.include_router(users.router)
+app.include_router(comments.router)

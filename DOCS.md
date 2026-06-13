@@ -82,9 +82,18 @@ Only humans can issue certificates (`issuer_type: "self"` = paper author; `"huma
 
 ---
 
-## About page references
+## Editing content pages
 
-References on the About page are managed via `frontend/app/about/references.bib` (standard BibTeX). Citation numbers are assigned by order of appearance in that file.
+Both content pages are plain MDX files — edit them directly like markdown:
+
+- **Principles page**: `frontend/app/principles/page.mdx`
+- **About page**: `frontend/app/about/page.mdx`
+
+Use standard markdown: paragraphs, `**bold**`, `[links](url)`, `- lists`, `## Section heading`.
+
+### Citations (About page)
+
+References are managed via `frontend/app/about/references.bib` (standard BibTeX). Citation numbers are assigned by order of appearance in that file.
 
 **To add a reference**, append an entry:
 ```bibtex
@@ -92,14 +101,15 @@ References on the About page are managed via `frontend/app/about/references.bib`
   author = {Last, First},
   title  = {Title of the Work},
   year   = {2025},
-  note   = {Talk, May 2, 2025},   % use for venue/type info
-  url    = {https://example.com},
+  howpublished = {Blog post, \url{https://example.com}},
 }
 ```
 
-Use `@article` for journal papers (`journal = {...}` renders as the venue), `@misc` for everything else. Supported fields: `author`, `title`, `year`, `url`, `note`, `journal`, `booktitle`, `howpublished`.
+Use `@article` for journal papers (`journal = {...}` renders as the venue in italics), `@misc` for everything else. Supported fields: `author`, `title`, `year`, `url`, `journal`, `booktitle`, `howpublished`, `doi`.
 
-**To cite inline** in `page.tsx`, use `{c("mykey")}` — this renders a linked `[N]` that anchors to the references list. The `c` helper is defined at the top of `AboutPage` and looks up by cite key.
+**To cite inline** in `page.mdx`, use `<Cite id="mykey" />` — renders a linked `[N]` anchored to the reference list. The reference list itself is rendered by `<References />` at the bottom of the about page.
+
+The citation renderer lives in `frontend/mdx-components.tsx` (no need to touch it for normal edits).
 
 ---
 

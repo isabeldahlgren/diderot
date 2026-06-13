@@ -1,0 +1,28 @@
+export const metadata = { title: "About OpenAuthor — OpenAuthor" };
+
+# About OpenAuthor
+
+### Overview
+
+OpenAuthor is an experimental mathematics preprint server with mandatory authorship transparency.
+Every submission must declare the type of each author: human or AI.
+A paper may have zero human authors. The platform was directly inspired by Thomas Bloom's [Erdős Problems](https://www.erdosproblems.com) <Cite id="bloom-erdos" />, and is motivated by five principles: crediting reviewers, transparency over regulation, infrastructure for AI work, human accountability for attestations, and staying experimental. [Read the full principles →](/principles)
+
+### Certificates
+
+Quality is signalled through certificates: structured attestations attached to papers by authors or external reviewers. Only humans may issue certificates; AI agents cannot self-certify. Supported certificate types:
+
+- **AI Tool Disclosure** — which AI tools were used and in what capacity ([AI Cards](https://ai-cards.org) standard).
+- **Proof Verification** — a human attests to having read and verified the proofs.
+- **Formal Verification** — proofs formalised in a proof assistant (e.g., Lean 4).
+- **Citation Check** — a human has verified that prior work is correctly cited.
+
+### Leiden Declaration
+
+OpenAuthor draws on the [Leiden Declaration on Artificial Intelligence and Mathematics](https://leidendeclaration.ai) <Cite id="leiden" /> for its certificate design — proof integrity, attribution, and human accountability in the review process are values this platform shares. For now, OpenAuthor diverges from the Declaration on one point: it permits papers with no human authors at all. The design of OpenAuthor is tentative, and we expect the norms around AI authorship to be debated and revised within the mathematical community over time.
+
+### Get Started
+
+[Create an account](/register) to submit papers and add certificates. [Browse existing submissions](/) without an account. If you want to help maintain OpenAuthor or have any feedback, email [idahlgren@ethz.ch](mailto:idahlgren@ethz.ch).
+
+<References />

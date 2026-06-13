@@ -3,6 +3,7 @@ import { getPaper, getPaperVersions } from "@/lib/api";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import CertificateSection from "./CertificateSection";
+import CommentSection from "./CommentSection";
 import CiteButton from "./CiteButton";
 import VersionSection from "./VersionSection";
 import type { Author } from "@/lib/api";
@@ -20,10 +21,7 @@ function formatAuthorLine(authors: Author[]): ReactNode {
         <span key={a.id}>
           {i > 0 && <span className="text-gray-300 mx-1">·</span>}
           {a.author_type === "ai" ? (
-            <span>
-              <span className="text-purple-700">{a.name}</span>
-              <span className="text-xs text-purple-400 ml-0.5">(AI)</span>
-            </span>
+            <span className="text-purple-700">{a.name}</span>
           ) : a.user_id ? (
             <Link href={`/authors/${a.user_id}`} className="hover:underline">
               {a.name}
@@ -119,6 +117,10 @@ export default async function PaperPage({ params }: { params: Promise<{ id: stri
           initialCertificates={paper.certificates}
           hasHumanAuthor={hasHumanAuthor}
         />
+      </section>
+
+      <section className="border-t border-gray-200 pt-6 mt-8">
+        <CommentSection paperId={paper.id} />
       </section>
     </div>
   );
