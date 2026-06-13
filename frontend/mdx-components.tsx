@@ -2,7 +2,7 @@ import type { MDXComponents } from "mdx/types";
 import Link from "next/link";
 import { readFileSync } from "fs";
 import path from "path";
-import { parseBib } from "./app/about/parseBib";
+import { parseBib, type BibEntry } from "./app/about/parseBib";
 
 function getRefs(): BibEntry[] {
   const bib = readFileSync(
