@@ -30,6 +30,17 @@ function References() {
       <h3 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3 mt-8">
         References
       </h3>
+      <p className="text-sm leading-relaxed text-gray-800 mb-4">
+        Curated lists of references can be found on the websites of {" "}
+        <a href="https://www.math.columbia.edu/~woit/wordpress/?p=15672" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-900">
+          Peter Woit
+        </a>
+        {" "} and {" "}
+        <a href="http://www.thomasbloom.org/AIlinks.html" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-900">
+          Thomas Bloom
+        </a>
+        .
+      </p>
       <ol className="space-y-2">
         {refs.map((ref, i) => {
           const italicTitle = ref.type !== "article";
@@ -53,6 +64,7 @@ function References() {
                 {ref.doi && (
                   <>, <a href={`https://doi.org/${ref.doi}`} target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-900">doi:{ref.doi}</a></>
                 )}
+                {ref.note && <>, {ref.note}</>}
                 {"."}
               </span>
             </li>

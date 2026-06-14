@@ -8,6 +8,7 @@ export type BibEntry = {
   venue?: string;
   url?: string;
   doi?: string;
+  note?: string;
 };
 
 function decode(s: string): string {
@@ -104,6 +105,10 @@ export function parseBib(content: string): BibEntry[] {
       ? (MONTH_ABBR[rawMonth.slice(0, 3).toLowerCase()] ?? rawMonth)
       : undefined;
 
+    const eprint = fields.eprint;
+    const isArxiv =
+      (fields.archiveprefix ?? "").toLowerCase().startsWith("arxiv") && !!eprint;
+
     entries.push({
       key: header[2],
       type: header[1].toLowerCase(),
@@ -111,9 +116,14 @@ export function parseBib(content: string): BibEntry[] {
       title: fields.title ?? header[2],
       year: fields.year,
       month,
-      venue: fields.journal ?? fields.booktitle ?? howVenue,
-      url: fields.url ?? howUrl,
+      venue:
+        fields.journal ?? fields.booktitle ?? howVenue ??
+        (isArxiv ? `arXiv:${eprint}` : undefined),
+      url:
+        fields.url ?? howUrl ??
+        (isArxiv ? `https://arxiv.org/abs/${eprint}` : undefined),
       doi: fields.doi,
+      note: fields.note,
     });
   }
 
