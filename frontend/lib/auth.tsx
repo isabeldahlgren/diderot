@@ -6,7 +6,7 @@ const API = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000") + "/api
 
 export interface AuthUser {
   id: string;
-  orcid_id: string;
+  orcid_id?: string;
   name: string;
   created_at: string;
 }
