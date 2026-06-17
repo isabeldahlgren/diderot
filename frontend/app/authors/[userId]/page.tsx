@@ -1,7 +1,14 @@
 import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getUser, getUserPapers, getUserReviewedPapers, type PaperListItem, type Author } from "@/lib/api";
+import {
+  getUser,
+  getUserAuthoredPapers,
+  getUserSubmittedPapers,
+  getUserReviewedPapers,
+  type PaperListItem,
+  type Author,
+} from "@/lib/api";
 
 function shortId(id: string): string {
   return id.replace(/-/g, "").slice(0, 8);
@@ -66,6 +73,21 @@ function PaperRow({ paper, index }: { paper: PaperListItem; index: number }) {
   );
 }
 
+function Section({ title, count, papers }: { title: string; count: number; papers: PaperListItem[] }) {
+  return (
+    <div className="mb-10">
+      <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-4">
+        {title} — {count} paper{count !== 1 ? "s" : ""}
+      </h2>
+      {papers.length === 0 ? (
+        <p className="text-sm text-gray-500">None yet.</p>
+      ) : (
+        papers.map((p, i) => <PaperRow key={p.id} paper={p} index={i} />)
+      )}
+    </div>
+  );
+}
+
 async function getOrcidAffiliation(orcidId: string): Promise<string | null> {
   try {
     const res = await fetch(`https://pub.orcid.org/v3.0/${orcidId}/employments`, {
@@ -92,13 +114,15 @@ export default async function AuthorPage({ params }: { params: Promise<{ userId:
   const { userId } = await params;
 
   let user;
-  let papers: PaperListItem[] = [];
-  let reviewed: PaperListItem[] = [];
+  let authored: PaperListItem[] = [];
+  let submitted: PaperListItem[] = [];
+  let certified: PaperListItem[] = [];
 
   try {
-    [user, papers, reviewed] = await Promise.all([
+    [user, authored, submitted, certified] = await Promise.all([
       getUser(userId),
-      getUserPapers(userId),
+      getUserAuthoredPapers(userId),
+      getUserSubmittedPapers(userId),
       getUserReviewedPapers(userId),
     ]);
   } catch {
@@ -131,38 +155,9 @@ export default async function AuthorPage({ params }: { params: Promise<{ userId:
         </p>
       </div>
 
-      <div className="mb-4">
-        <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400">
-          Papers — {papers.length} paper{papers.length !== 1 ? "s" : ""}
-        </h2>
-      </div>
-
-      {papers.length === 0 ? (
-        <p className="text-sm text-gray-500 mb-10">No papers submitted yet.</p>
-      ) : (
-        <div className="mb-10">
-          {papers.map((p, i) => (
-            <PaperRow key={p.id} paper={p} index={i} />
-          ))}
-        </div>
-      )}
-
-      <div className="mb-4 mt-2">
-        <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400">
-          Certificates issued — {reviewed.length} paper{reviewed.length !== 1 ? "s" : ""}
-        </h2>
-      </div>
-
-      {reviewed.length === 0 ? (
-        <p className="text-sm text-gray-500 mb-10">No certificates issued yet.</p>
-      ) : (
-        <div className="mb-10">
-          {reviewed.map((p, i) => (
-            <PaperRow key={p.id} paper={p} index={i} />
-          ))}
-        </div>
-      )}
-
+      <Section title="Papers certified" count={certified.length} papers={certified} />
+      <Section title="Papers authored" count={authored.length} papers={authored} />
+      <Section title="Papers submitted" count={submitted.length} papers={submitted} />
     </div>
   );
 }

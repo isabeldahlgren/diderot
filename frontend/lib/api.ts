@@ -107,6 +107,18 @@ export async function getUserPapers(userId: string): Promise<PaperListItem[]> {
   return res.json();
 }
 
+export async function getUserAuthoredPapers(userId: string): Promise<PaperListItem[]> {
+  const res = await fetch(`${API}/users/${userId}/authored`);
+  if (!res.ok) throw new Error("Failed to fetch authored papers");
+  return res.json();
+}
+
+export async function getUserSubmittedPapers(userId: string): Promise<PaperListItem[]> {
+  const res = await fetch(`${API}/users/${userId}/submitted`);
+  if (!res.ok) throw new Error("Failed to fetch submitted papers");
+  return res.json();
+}
+
 export async function getUserReviewedPapers(userId: string): Promise<PaperListItem[]> {
   const res = await fetch(`${API}/users/${userId}/reviewed`);
   if (!res.ok) throw new Error("Failed to fetch reviewed papers");

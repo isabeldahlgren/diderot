@@ -39,6 +39,27 @@ def get_user_papers(user_id: uuid.UUID, db: Session = Depends(get_db)):
     return [_to_list_item(p) for p in papers]
 
 
+@router.get("/{user_id}/authored", response_model=list[PaperListItem])
+def get_user_authored_papers(user_id: uuid.UUID, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    authored_ids = db.query(Author.paper_id).filter(Author.user_id == user_id).subquery()
+    base = db.query(Paper).filter(Paper.id.in_(authored_ids)).order_by(Paper.created_at.desc())
+    papers = _latest_only(base, db).all()
+    return [_to_list_item(p) for p in papers]
+
+
+@router.get("/{user_id}/submitted", response_model=list[PaperListItem])
+def get_user_submitted_papers(user_id: uuid.UUID, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    base = db.query(Paper).filter(Paper.submitter_user_id == user_id).order_by(Paper.created_at.desc())
+    papers = _latest_only(base, db).all()
+    return [_to_list_item(p) for p in papers]
+
+
 @router.get("/{user_id}/reviewed", response_model=list[PaperListItem])
 def get_user_reviewed_papers(user_id: uuid.UUID, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == user_id).first()
@@ -53,9 +74,16 @@ def get_user_reviewed_papers(user_id: uuid.UUID, db: Session = Depends(get_db)):
     papers = (
         db.query(Paper)
         .filter(Paper.id.in_(certified_ids))
-        .order_by(Paper.created_at.desc())
+        .order_by(Paper.version.desc(), Paper.created_at.desc())
         .all()
     )
-    return [_to_list_item(p) for p in papers]
+    seen: set[uuid.UUID] = set()
+    deduped = []
+    for p in papers:
+        root = p.root_id or p.id
+        if root not in seen:
+            seen.add(root)
+            deduped.append(p)
+    return [_to_list_item(p) for p in deduped]
 
 

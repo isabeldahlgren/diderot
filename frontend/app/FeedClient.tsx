@@ -124,6 +124,20 @@ function PaperRow({ paper, index }: { paper: PaperListItem; index: number }) {
 
       <div className="flex gap-4 text-xs text-gray-400">
         <span>Submitted {date}</span>
+        {paper.submitter_user_id && (() => {
+          const submitter = paper.authors.find((a) => a.user_id === paper.submitter_user_id);
+          return (
+            <span>
+              by{" "}
+              <Link
+                href={`/authors/${paper.submitter_user_id}`}
+                className="text-gray-700 font-medium hover:underline"
+              >
+                {submitter?.name ?? "unknown"}
+              </Link>
+            </span>
+          );
+        })()}
         <span>v{paper.version}</span>
         {paper.certificate_count > 0 && (
           <span className="text-green-700">
