@@ -1,0 +1,36 @@
+export const metadata = { title: "Certificate Docs — OpenAuthor" };
+
+# Certificates
+
+Certificates are structured attestations attached to papers on OpenAuthor. Each certificate is issued by an identified human; their name, role, and the date of issuance are publicly recorded. No AI agent may self-certify. AI Tool Disclosure can only be issued by the paper's submitting author; all other certificates may be issued by any registered user.
+
+---
+
+## AI Tool Disclosure
+
+Discloses which AI tools were used and in what capacity, following the [AI cards](https://ai-cards.org) standard. Records model identifiers, their roles (proof search, formalization, writing, etc.), and which sections are AI-generated versus human-written.
+
+---
+
+## Proof Verification
+
+The issuer attests that they have personally read and verified the mathematical proofs to their own satisfaction. The certificate records the scope (which theorems or lemmas) and any caveats.
+
+---
+
+## Formal Verification
+
+A Formal Verification certificate has three components:
+- **Formalization repo** — a public repository containing the formalized proof. If autoformalized, it must include a `formalization.yaml` following the [mathlib-initiative schema](https://github.com/mathlib-initiative/formalization.yaml).
+- **Comparator repo** — a public repository with the [comparator](https://github.com/leanprover/comparator) verification.
+- **Human attestation** — by submitting this certificate, the issuer attests that the `Challenge.lean` file in the comparator repo correctly formalizes the corresponding statement(s) from the paper.
+
+---
+
+## Citation Check
+
+The issuer attests that no relevant prior work has been omitted from the paper's references. If omissions were found, the Notes field specifies which part of the paper should cite what, and a `.bib` file with the missing references should be attached.
+
+---
+
+[← About OpenAuthor](/about)

@@ -143,7 +143,6 @@ function ProofVerificationPayloadView({ payload }: { payload: Record<string, unk
   return (
     <div className="space-y-3">
       {!!payload.scope && <FieldRow label="Scope" value={payload.scope as string} />}
-      {!!payload.method && <FieldRow label="Method" value={(payload.method as string).replace(/_/g, " ")} />}
       {!!payload.notes && <FieldRow label="Notes" value={payload.notes as string} />}
     </div>
   );
@@ -163,6 +162,26 @@ function FormalVerificationPayloadView({ payload }: { payload: Record<string, un
           }
         />
       )}
+      {!!payload.challenge_lean_url && (
+        <FieldRow
+          label="Challenge.lean"
+          value={
+            <a href={payload.challenge_lean_url as string} target="_blank" rel="noopener noreferrer" className="underline text-blue-700">
+              {payload.challenge_lean_url as string}
+            </a>
+          }
+        />
+      )}
+      {!!payload.formalization_yaml_url && (
+        <FieldRow
+          label="formalization.yaml"
+          value={
+            <a href={payload.formalization_yaml_url as string} target="_blank" rel="noopener noreferrer" className="underline text-blue-700">
+              {payload.formalization_yaml_url as string}
+            </a>
+          }
+        />
+      )}
       {!!payload.notes && <FieldRow label="Notes" value={payload.notes as string} />}
     </div>
   );
@@ -171,6 +190,16 @@ function FormalVerificationPayloadView({ payload }: { payload: Record<string, un
 function CitationCheckPayloadView({ payload }: { payload: Record<string, unknown> }) {
   return (
     <div className="space-y-3">
+      {!!payload.bib_url && (
+        <FieldRow
+          label=".bib file"
+          value={
+            <a href={payload.bib_url as string} target="_blank" rel="noopener noreferrer" className="underline text-blue-700">
+              {payload.bib_url as string}
+            </a>
+          }
+        />
+      )}
       {!!payload.notes && <FieldRow label="Notes" value={payload.notes as string} />}
     </div>
   );
@@ -440,7 +469,6 @@ function AiUsageForm({
 
 interface ProofVerificationState {
   scope: string;
-  method: string;
   notes: string;
 }
 
@@ -464,24 +492,11 @@ function ProofVerificationForm({
         />
       </div>
       <div>
-        <label className="block text-xs font-medium mb-1">Method</label>
-        <CustomSelect
-          value={state.method}
-          onChange={(v) => onChange({ ...state, method: v })}
-          options={[
-            { value: "line_by_line", label: "Line by line" },
-            { value: "high_level", label: "High level" },
-            { value: "partial", label: "Partial" },
-            { value: "other", label: "Other" },
-          ]}
-        />
-      </div>
-      <div>
         <label className="block text-xs font-medium mb-1">Notes</label>
         <textarea
           className="w-full border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-gray-500 resize-none"
-          rows={2}
-          placeholder="Any caveats or additional context"
+          rows={3}
+          placeholder="Describe what you checked and any caveats"
           value={state.notes}
           onChange={(e) => onChange({ ...state, notes: e.target.value })}
         />
@@ -495,6 +510,8 @@ function ProofVerificationForm({
 interface FormalVerificationState {
   proof_assistant: string;
   repository_url: string;
+  challenge_lean_url: string;
+  formalization_yaml_url: string;
   notes: string;
 }
 
@@ -523,7 +540,7 @@ function FormalVerificationForm({
         />
       </div>
       <div>
-        <label className="block text-xs font-medium mb-1">Repository URL</label>
+        <label className="block text-xs font-medium mb-1">Repository URL <span className="text-red-500">*</span></label>
         <input
           type="url"
           className="w-full border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-500"
@@ -532,6 +549,36 @@ function FormalVerificationForm({
           onChange={(e) => onChange({ ...state, repository_url: e.target.value })}
           required
         />
+      </div>
+      <div>
+        <label className="block text-xs font-medium mb-1">
+          Challenge.lean URL <span className="text-red-500">*</span>
+        </label>
+        <input
+          type="url"
+          className="w-full border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-500"
+          placeholder="https://github.com/.../Challenge.lean"
+          value={state.challenge_lean_url}
+          onChange={(e) => onChange({ ...state, challenge_lean_url: e.target.value })}
+          required
+        />
+        <p className="text-xs text-gray-400 mt-0.5">
+          Must be compatible with the{" "}
+          <a href="https://github.com/leanprover/comparator" target="_blank" rel="noopener noreferrer" className="underline">
+            leanprover/comparator
+          </a>
+        </p>
+      </div>
+      <div>
+        <label className="block text-xs font-medium mb-1">formalization.yaml URL</label>
+        <input
+          type="url"
+          className="w-full border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-500"
+          placeholder="https://github.com/.../formalization.yaml"
+          value={state.formalization_yaml_url}
+          onChange={(e) => onChange({ ...state, formalization_yaml_url: e.target.value })}
+        />
+        <p className="text-xs text-gray-400 mt-0.5">Required if autoformalized — see docs for expected format</p>
       </div>
       <div>
         <label className="block text-xs font-medium mb-1">Notes</label>
@@ -550,6 +597,7 @@ function FormalVerificationForm({
 // ── Form: Citation Check ─────────────────────────────────────────────────────
 
 interface CitationCheckState {
+  bib_url: string;
   notes: string;
 }
 
@@ -563,7 +611,18 @@ function CitationCheckForm({
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-xs font-medium mb-1">Notes</label>
+        <label className="block text-xs font-medium mb-1">.bib file URL <span className="text-gray-400 font-normal">(optional)</span></label>
+        <input
+          type="url"
+          className="w-full border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-500"
+          placeholder="https://..."
+          value={state.bib_url}
+          onChange={(e) => onChange({ ...state, bib_url: e.target.value })}
+        />
+        <p className="text-xs text-gray-400 mt-0.5">Link to the verified or corrected bibliography</p>
+      </div>
+      <div>
+        <label className="block text-xs font-medium mb-1">Notes <span className="text-red-500">*</span></label>
         <textarea
           className="w-full border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-gray-500 resize-none"
           rows={4}
@@ -612,15 +671,17 @@ export function CertificateModal({
   });
   const [proofVerification, setProofVerification] = useState<ProofVerificationState>({
     scope: "",
-    method: "line_by_line",
     notes: "",
   });
   const [formalVerification, setFormalVerification] = useState<FormalVerificationState>({
     proof_assistant: "Lean 4",
     repository_url: "",
+    challenge_lean_url: "",
+    formalization_yaml_url: "",
     notes: "",
   });
   const [citationCheck, setCitationCheck] = useState<CitationCheckState>({
+    bib_url: "",
     notes: "",
   });
   const close = useCallback(() => onClose(), [onClose]);
@@ -648,17 +709,19 @@ export function CertificateModal({
       case "proof_verification":
         return {
           scope: proofVerification.scope,
-          method: proofVerification.method,
           ...(proofVerification.notes && { notes: proofVerification.notes }),
         };
       case "formal_verification":
         return {
           proof_assistant: formalVerification.proof_assistant,
           repository_url: formalVerification.repository_url,
+          challenge_lean_url: formalVerification.challenge_lean_url,
+          ...(formalVerification.formalization_yaml_url && { formalization_yaml_url: formalVerification.formalization_yaml_url }),
           ...(formalVerification.notes && { notes: formalVerification.notes }),
         };
       case "citation_check":
         return {
+          ...(citationCheck.bib_url && { bib_url: citationCheck.bib_url }),
           notes: citationCheck.notes,
         };
     }
@@ -683,10 +746,13 @@ export function CertificateModal({
     label: def.label,
   }));
 
-  const issuerOptions = [
-    ...(hasHumanAuthor ? [{ value: "self", label: "I am an author of this paper" }] : []),
-    { value: "human_reviewer", label: "I am an external reviewer / reader" },
-  ];
+  const issuerOptions =
+    certType === "ai_usage"
+      ? [{ value: "self", label: "I am an author of this paper" }]
+      : [
+          ...(hasHumanAuthor ? [{ value: "self", label: "I am an author of this paper" }] : []),
+          { value: "human_reviewer", label: "I am an external reviewer / reader" },
+        ];
 
   return (
     <div
@@ -707,7 +773,11 @@ export function CertificateModal({
               <label className="block text-xs font-medium mb-1">Certificate type</label>
               <CustomSelect
                 value={certType}
-                onChange={(v) => setCertType(v as CertificateType)}
+                onChange={(v) => {
+                  const t = v as CertificateType;
+                  setCertType(t);
+                  if (t === "ai_usage") setIssuerType("self");
+                }}
                 options={certTypeOptions}
               />
               <p className="text-xs text-gray-400 mt-1">
@@ -740,21 +810,26 @@ export function CertificateModal({
           )}
           {error && <p className="text-xs text-red-500">{error}</p>}
 
-          <div className="flex gap-3 pt-1 border-t border-gray-100">
-            <button
-              type="submit"
-              disabled={submitting}
-              className="px-5 py-2 bg-gray-900 text-white text-sm hover:bg-gray-700 disabled:opacity-50 transition-colors"
-            >
-              {submitting ? "Adding…" : "Add certificate"}
-            </button>
-            <button
-              type="button"
-              onClick={close}
-              className="text-sm text-gray-400 hover:text-gray-700"
-            >
-              cancel
-            </button>
+          <div className="flex items-center justify-between pt-1 border-t border-gray-100">
+            <div className="flex gap-3">
+              <button
+                type="submit"
+                disabled={submitting}
+                className="px-5 py-2 bg-gray-900 text-white text-sm hover:bg-gray-700 disabled:opacity-50 transition-colors"
+              >
+                {submitting ? "Adding…" : "Add certificate"}
+              </button>
+              <button
+                type="button"
+                onClick={close}
+                className="text-sm text-gray-400 hover:text-gray-700"
+              >
+                cancel
+              </button>
+            </div>
+            <Link href="/docs" target="_blank" className="text-xs text-gray-400 hover:text-gray-700 underline">
+              What do certificates mean?
+            </Link>
           </div>
         </form>
       </div>

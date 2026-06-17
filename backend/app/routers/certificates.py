@@ -45,6 +45,9 @@ def add_certificate(
     if cert_in.issuer_type not in VALID_ISSUER_TYPES:
         raise HTTPException(status_code=400, detail=f"issuer_type must be one of {VALID_ISSUER_TYPES}")
 
+    if cert_in.certificate_type == "ai_usage" and cert_in.issuer_type != "self":
+        raise HTTPException(status_code=400, detail="AI Tool Disclosure can only be issued by the paper's author")
+
     if cert_in.certificate_type not in CERT_TYPE_META:
         raise HTTPException(
             status_code=400,
