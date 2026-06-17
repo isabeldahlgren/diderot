@@ -827,7 +827,7 @@ export function CertificateModal({
                 cancel
               </button>
             </div>
-            <Link href="/docs" target="_blank" className="text-xs text-gray-400 hover:text-gray-700 underline">
+            <Link href="/documentation" target="_blank" className="text-xs text-gray-400 hover:text-gray-700 underline">
               What do certificates mean?
             </Link>
           </div>

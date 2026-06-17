@@ -26,8 +26,8 @@ export default function NavHeader() {
             <Link href="/principles" className="hover:text-gray-900 transition-colors">
               Principles
             </Link>
-            <Link href="/docs" className="hover:text-gray-900 transition-colors">
-              Docs
+            <Link href="/documentation" className="hover:text-gray-900 transition-colors">
+              Documentation
             </Link>
           </nav>
         </div>
