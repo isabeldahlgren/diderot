@@ -105,7 +105,7 @@ export default async function PaperPage({ params }: { params: Promise<{ id: stri
           <span className="text-sm text-gray-400">No PDF</span>
         )}
         <CiteButton
-          bibtex={`@misc{openauthor:${shortId(paper.id)},\n  title={${paper.title}},\n  author={${paper.authors.map((a) => a.name).join(" and ")}},\n  year={${new Date(paper.created_at).getFullYear()}},\n  note={OpenAuthor preprint OA:${shortId(paper.id)}}\n}`}
+          bibtex={`@misc{diderot:${shortId(paper.id)},\n  title={${paper.title}},\n  author={${paper.authors.map((a) => a.name).join(" and ")}},\n  year={${new Date(paper.created_at).getFullYear()}},\n  note={Diderot preprint OA:${shortId(paper.id)}}\n}`}
         />
       </div>
 

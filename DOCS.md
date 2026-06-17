@@ -1,6 +1,6 @@
-# OpenAuthor — DOCS.md
+# Diderot — DOCS.md
 
-OpenAuthor is a preprint server where AI can be a disclosed co-author or sole author. Quality is signalled via certificates (structured attestations attached to papers). No editorial gatekeeping; authorship must be transparent.
+Diderot is a preprint server where AI can be a disclosed co-author or sole author. Quality is signalled via certificates (structured attestations attached to papers). No editorial gatekeeping; authorship must be transparent.
 
 ---
 

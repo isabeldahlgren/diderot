@@ -17,7 +17,7 @@ export default async function Home() {
   return (
     <div>
       <p className="text-sm text-gray-600 leading-relaxed mb-6 max-w-2xl border-l-2 border-gray-200 pl-4">
-        OpenAuthor is an preprint server for mathematics where AI may be a disclosed co-author or sole author.
+        Diderot is a preprint server for mathematics where AI may be a disclosed co-author or sole author.
         {" "}Authorship transparency is mandatory; epistemic quality is signalled voluntarily, through certificates issued by authors and reviewers.
       </p>
 

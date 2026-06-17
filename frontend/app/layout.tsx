@@ -7,7 +7,7 @@ import NavHeader from "./NavHeader";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "OpenAuthor",
+  title: "Diderot",
   description: "A preprint server for human and AI authors",
 };
 

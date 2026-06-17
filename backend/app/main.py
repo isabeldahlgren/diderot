@@ -42,7 +42,7 @@ with engine.connect() as conn:
     """))
     conn.commit()
 
-app = FastAPI(title="OpenAuthor API")
+app = FastAPI(title="Diderot API")
 
 _cors_origins = ["http://localhost:3000"]
 if _extra := os.getenv("CORS_ORIGINS"):

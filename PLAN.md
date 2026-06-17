@@ -1,4 +1,4 @@
-# OpenAuthor — PLAN.md
+# Diderot — PLAN.md
 
 > A preprint server where AI can be a disclosed co-author or sole author.
 > Epistemic quality is not enforced — it is *signalled*, voluntarily, via certificates.
@@ -7,9 +7,9 @@
 
 ## 1. Philosophy
 
-OpenAuthor is **permissive by default and transparent by design**. There are no bans on AI-generated content. There is no editorial gatekeeping. The only requirement is honest authorship disclosure. Readers decide what they trust.
+Diderot is **permissive by default and transparent by design**. There are no bans on AI-generated content. There is no editorial gatekeeping. The only requirement is honest authorship disclosure. Readers decide what they trust.
 
-The quality signal comes from certificates. Certificate issuers — journals, tools, reviewers, automated systems — bear reputational costs for issuing bad ones. Over time, a market of issuers will emerge, and readers will learn which issuers to trust. OpenAuthor does not pick winners. It is infrastructure: it stores and displays certificates neutrally, shows the issuer clearly, and gets out of the way.
+The quality signal comes from certificates. Certificate issuers — journals, tools, reviewers, automated systems — bear reputational costs for issuing bad ones. Over time, a market of issuers will emerge, and readers will learn which issuers to trust. Diderot does not pick winners. It is infrastructure: it stores and displays certificates neutrally, shows the issuer clearly, and gets out of the way.
 
 Mechanism design is hard. Voluntary transparency is tractable. We do the tractable thing.
 
@@ -19,7 +19,7 @@ Mechanism design is hard. Voluntary transparency is tractable. We do the tractab
 
 ### 2.1 Papers
 
-A paper on OpenAuthor is a submission with:
+A paper on Diderot is a submission with:
 
 - A **PDF**
 - An **author list** — each author tagged as `human` or `ai`
@@ -130,7 +130,7 @@ GET  /api/v1/papers/:id/certificates
 
 ---
 
-## 7. What OpenAuthor Does NOT Do (v1)
+## 7. What Diderot Does NOT Do (v1)
 
 - No moderation or editorial filtering (except a minimal content policy — see §9)
 - No quality scores
@@ -144,7 +144,7 @@ GET  /api/v1/papers/:id/certificates
 ## 8. Open Questions
 
 - **Moderation floor**: no-moderation is clean in principle. In practice, CSAM or incitement could arrive. A minimal content policy (not epistemic, just legal) is needed before wider launch.
-- **BibTeX / citation format for AI authors**: no standard exists. OpenAuthor should propose one.
+- **BibTeX / citation format for AI authors**: no standard exists. Diderot should propose one.
 - **ORCID for AI**: ORCID doesn't issue iDs for non-humans. Mint our own AI author identifiers?
 - **Certificate spam**: open certificates mean anyone can issue a fake "peer reviewed" certificate. Primary mitigation: display always shows issuer URL prominently, readers judge. Secondary: schema registry can be curated over time if spam becomes a problem.
 - **Long-term preservation**: consider early partnership with Internet Archive or a university library.
@@ -157,7 +157,7 @@ Drawn from the [Leiden Declaration on Artificial Intelligence and Mathematics](h
 
 ### 9.1 Homepage — mission lede
 
-The feed currently starts with "Recent Submissions". Add a two-sentence mission statement above it, visible without scrolling — analogous to the Leiden Declaration's preamble. Readers landing for the first time need to immediately understand what OpenAuthor is and why authorship transparency matters. The lede should be static prose, not a hero banner; in keeping with the mathematical journal aesthetic.
+The feed currently starts with "Recent Submissions". Add a two-sentence mission statement above it, visible without scrolling — analogous to the Leiden Declaration's preamble. Readers landing for the first time need to immediately understand what Diderot is and why authorship transparency matters. The lede should be static prose, not a hero banner; in keeping with the mathematical journal aesthetic.
 
 ### 9.2 Standalone principles page (`/principles`)
 
@@ -201,7 +201,7 @@ These can be client-side filters on the already-loaded list for now; move to que
 
 ### 9.7 Public API documentation page (`/api-docs`)
 
-The arXiv paper's recommendation for community-owned, transparent infrastructure applies here. A plain `/api-docs` page listing the REST endpoints with example `curl` commands signals that OpenAuthor is infrastructure, not a walled garden. It also makes programmatic AI submissions self-service. No third-party tooling (Swagger UI) needed — a static page with code blocks is enough.
+The arXiv paper's recommendation for community-owned, transparent infrastructure applies here. A plain `/api-docs` page listing the REST endpoints with example `curl` commands signals that Diderot is infrastructure, not a walled garden. It also makes programmatic AI submissions self-service. No third-party tooling (Swagger UI) needed — a static page with code blocks is enough.
 
 ### 9.8 Versioned schema registry (`/schemas`)
 

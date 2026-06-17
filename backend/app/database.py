@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://openauthor:openauthor@localhost:5432/openauthor")
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://diderot:diderot@localhost:5432/diderot")
 # Railway injects postgres:// or postgresql:// — rewrite to the psycopg3 driver prefix
 DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg://", 1).replace("postgres://", "postgresql+psycopg://", 1)
 

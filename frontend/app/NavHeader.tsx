@@ -11,7 +11,7 @@ export default function NavHeader() {
       <div className="max-w-4xl mx-auto px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-6">
           <Link href="/" className="text-lg font-semibold tracking-tight">
-            OpenAuthor
+            Diderot
           </Link>
           <nav className="hidden sm:flex items-center gap-4 text-sm text-gray-500">
             <Link href="/" className="hover:text-gray-900 transition-colors">

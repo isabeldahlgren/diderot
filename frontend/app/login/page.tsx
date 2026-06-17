@@ -9,7 +9,7 @@ export default function LoginPage() {
     <div className="max-w-sm">
       <h1 className="text-2xl font-semibold mb-4">Sign in</h1>
       <p className="text-sm text-gray-500 mb-8">
-        OpenAuthor accounts are tied to your ORCID iD. We do not store any passwords.
+        Diderot accounts are tied to your ORCID iD. We do not store any passwords.
       </p>
       <a
         href={orcidLoginUrl}
