@@ -656,9 +656,7 @@ export function CertificateModal({
   onClose: () => void;
 }) {
   const [certType, setCertType] = useState<CertificateType>("ai_usage");
-  const [issuerType, setIssuerType] = useState<IssuerType>(
-    hasHumanAuthor ? "self" : "human_reviewer"
-  );
+  const [issuerType, setIssuerType] = useState<IssuerType>("self");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -750,8 +748,8 @@ export function CertificateModal({
     certType === "ai_usage"
       ? [{ value: "self", label: "I am an author of this paper" }]
       : [
-          ...(hasHumanAuthor ? [{ value: "self", label: "I am an author of this paper" }] : []),
-          { value: "human_reviewer", label: "I am an external reviewer / reader" },
+          { value: "self", label: "I am an author of this paper" },
+          { value: "human_reviewer", label: "I am an external reviewer" },
         ];
 
   return (
