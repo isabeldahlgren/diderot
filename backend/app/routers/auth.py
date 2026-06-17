@@ -21,14 +21,16 @@ def orcid_login():
 def orcid_callback(code: str, db: Session = Depends(get_db)):
     data = exchange_orcid_code(code)
     orcid_id = data["orcid"]
-    name = " ".join(part for part in [data.get("given_name"), data.get("family_name")] if part) or orcid_id
+    name = data.get("name") or orcid_id
 
     user = db.query(User).filter(User.orcid_id == orcid_id).first()
     if not user:
         user = User(orcid_id=orcid_id, name=name)
         db.add(user)
-        db.commit()
-        db.refresh(user)
+    elif name and name != orcid_id:
+        user.name = name
+    db.commit()
+    db.refresh(user)
 
     token = create_access_token(str(user.id))
     return RedirectResponse(f"{FRONTEND_URL}/auth/callback?token={token}")

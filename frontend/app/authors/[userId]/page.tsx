@@ -66,6 +66,28 @@ function PaperRow({ paper, index }: { paper: PaperListItem; index: number }) {
   );
 }
 
+async function getOrcidAffiliation(orcidId: string): Promise<string | null> {
+  try {
+    const res = await fetch(`https://pub.orcid.org/v3.0/${orcidId}/employments`, {
+      headers: { Accept: "application/json" },
+      next: { revalidate: 3600 },
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const groups: unknown[] = data["affiliation-group"] ?? [];
+    for (const group of groups) {
+      const summary = (group as { summaries?: { "employment-summary"?: { "end-date"?: unknown; organization?: { name?: string }; "role-title"?: string } }[] }).summaries?.[0]?.["employment-summary"];
+      if (summary && !summary["end-date"] && summary.organization?.name) {
+        const parts = [summary["role-title"], summary.organization.name].filter(Boolean);
+        return parts.join(", ");
+      }
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export default async function AuthorPage({ params }: { params: Promise<{ userId: string }> }) {
   const { userId } = await params;
 
@@ -83,21 +105,29 @@ export default async function AuthorPage({ params }: { params: Promise<{ userId:
     notFound();
   }
 
+  const affiliation = user.orcid_id ? await getOrcidAffiliation(user.orcid_id) : null;
+
   return (
     <div className="max-w-3xl">
       <div className="mb-8 pb-6 border-b border-gray-200">
         <Link href="/" className="text-sm text-gray-400 hover:text-gray-900 transition-colors">← All papers</Link>
         <h1 className="text-2xl font-semibold mt-4 mb-1">{user.name}</h1>
-        <p className="text-sm text-gray-400">
+        {affiliation && (
+          <p className="text-sm text-gray-600 mb-1">{affiliation}</p>
+        )}
+        <p className="text-sm text-gray-400 flex items-center gap-2 flex-wrap">
           {user.orcid_id && (
-            <>
-              <a href={`https://orcid.org/${user.orcid_id}`} target="_blank" rel="noreferrer" className="hover:text-gray-900 hover:underline">
-                ORCID: {user.orcid_id}
-              </a>
-              <span className="mx-2">·</span>
-            </>
+            <a
+              href={`https://orcid.org/${user.orcid_id}`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1 text-xs border border-gray-300 px-2 py-0.5 hover:border-gray-600 hover:text-gray-700 transition-colors font-mono"
+            >
+              <span className="text-green-600 font-bold">iD</span>
+              {user.orcid_id}
+            </a>
           )}
-          Member since {new Date(user.created_at).toLocaleDateString("en-GB", { year: "numeric", month: "long" })}
+          <span>Member since {new Date(user.created_at).toLocaleDateString("en-GB", { year: "numeric", month: "long" })}</span>
         </p>
       </div>
 
