@@ -14,10 +14,16 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={`${inter.className} bg-white text-gray-900 min-h-screen`}>
+      <body className={`${inter.className} bg-white text-gray-900 min-h-screen flex flex-col`}>
         <AuthProvider>
           <NavHeader />
-          <main className="max-w-4xl mx-auto px-6 py-10">{children}</main>
+          <main className="max-w-4xl mx-auto px-6 py-10 flex-1 w-full">{children}</main>
+          <footer className="mt-16">
+            <div className="max-w-4xl mx-auto px-6 py-6 flex flex-col sm:flex-row gap-4 sm:gap-8 text-xs text-gray-400">
+              <span>Community: <a href="https://discord.gg/WEPEx4SJ" className="hover:text-gray-900 underline underline-offset-2">Discord</a></span>
+              <span>Contact: <a href="mailto:idahlgren@ethz.ch" className="hover:text-gray-900 underline underline-offset-2">idahlgren@ethz.ch</a></span>
+            </div>
+          </footer>
         </AuthProvider>
       </body>
     </html>
