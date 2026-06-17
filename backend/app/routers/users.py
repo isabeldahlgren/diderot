@@ -11,10 +11,10 @@ router = APIRouter(prefix="/api/v1/users", tags=["users"])
 
 
 @router.get("/lookup", response_model=UserPublic)
-def lookup_user_by_email(email: str = Query(...), db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == email.strip().lower()).first()
+def lookup_user_by_orcid(orcid_id: str = Query(...), db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.orcid_id == orcid_id.strip()).first()
     if not user:
-        raise HTTPException(status_code=404, detail="No account found with that email")
+        raise HTTPException(status_code=404, detail="No account found with that ORCID iD")
     return user
 
 

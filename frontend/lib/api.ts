@@ -60,6 +60,7 @@ export interface PaperListItem {
 
 export interface UserPublic {
   id: string;
+  orcid_id?: string;
   name: string;
   created_at: string;
 }
@@ -82,9 +83,15 @@ export async function getPaperVersions(id: string): Promise<PaperListItem[]> {
   return res.json();
 }
 
-export async function lookupUserByEmail(email: string): Promise<UserPublic> {
-  const res = await fetch(`${API}/users/lookup?email=${encodeURIComponent(email)}`);
-  if (!res.ok) throw new Error("No account found with that email");
+export async function lookupUserByOrcid(orcidId: string): Promise<UserPublic> {
+  const res = await fetch(`${API}/users/lookup?orcid_id=${encodeURIComponent(orcidId)}`);
+  if (!res.ok) throw new Error("No account found with that ORCID iD");
+  return res.json();
+}
+
+export async function getMe(token: string): Promise<UserPublic> {
+  const res = await fetch(`${API}/auth/me`, { headers: { Authorization: `Bearer ${token}` } });
+  if (!res.ok) throw new Error("Failed to load account");
   return res.json();
 }
 

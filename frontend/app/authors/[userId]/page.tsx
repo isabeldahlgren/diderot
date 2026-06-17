@@ -89,6 +89,14 @@ export default async function AuthorPage({ params }: { params: Promise<{ userId:
         <Link href="/" className="text-sm text-gray-400 hover:text-gray-900 transition-colors">← All papers</Link>
         <h1 className="text-2xl font-semibold mt-4 mb-1">{user.name}</h1>
         <p className="text-sm text-gray-400">
+          {user.orcid_id && (
+            <>
+              <a href={`https://orcid.org/${user.orcid_id}`} target="_blank" rel="noreferrer" className="hover:text-gray-900 hover:underline">
+                ORCID: {user.orcid_id}
+              </a>
+              <span className="mx-2">·</span>
+            </>
+          )}
           Member since {new Date(user.created_at).toLocaleDateString("en-GB", { year: "numeric", month: "long" })}
         </p>
       </div>

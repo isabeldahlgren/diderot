@@ -16,6 +16,19 @@ with engine.connect() as conn:
     conn.execute(text("ALTER TABLE certificates ADD COLUMN IF NOT EXISTS version INTEGER NOT NULL DEFAULT 1"))
     conn.execute(text("ALTER TABLE papers ADD COLUMN IF NOT EXISTS root_id UUID REFERENCES papers(id)"))
     conn.execute(text("ALTER TABLE authors ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES users(id)"))
+    conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS orcid_id VARCHAR"))
+    conn.execute(text("ALTER TABLE users DROP COLUMN IF EXISTS password_hash"))
+    conn.execute(text("ALTER TABLE users DROP COLUMN IF EXISTS email"))
+    conn.execute(text("""
+        DO $$
+        BEGIN
+            IF NOT EXISTS (
+                SELECT 1 FROM pg_constraint WHERE conname = 'users_orcid_id_key'
+            ) THEN
+                ALTER TABLE users ADD CONSTRAINT users_orcid_id_key UNIQUE (orcid_id);
+            END IF;
+        END $$;
+    """))
     # Backfill user_id for human authors whose name matches the paper's submitter
     conn.execute(text("""
         UPDATE authors a

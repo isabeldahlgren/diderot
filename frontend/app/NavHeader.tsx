@@ -43,17 +43,12 @@ export default function NavHeader() {
               </button>
             </>
           ) : (
-            <>
-              <Link href="/login" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
-                Sign in
-              </Link>
-              <Link
-                href="/register"
-                className="text-sm px-3 py-1 border border-gray-400 text-gray-600 hover:border-gray-900 hover:text-gray-900 transition-colors"
-              >
-                Register
-              </Link>
-            </>
+            <Link
+              href="/login"
+              className="text-sm px-3 py-1 border border-gray-400 text-gray-600 hover:border-gray-900 hover:text-gray-900 transition-colors"
+            >
+              Sign in
+            </Link>
           )}
         </div>
       </div>

@@ -6,7 +6,7 @@ const API = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000") + "/api
 
 export interface AuthUser {
   id: string;
-  email: string;
+  orcid_id: string;
   name: string;
   created_at: string;
 }
@@ -17,8 +17,8 @@ interface AuthState {
 }
 
 interface AuthContextValue extends AuthState {
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, name: string, password: string) => Promise<void>;
+  orcidLoginUrl: string;
+  setSession: (token: string, user: AuthUser) => void;
   logout: () => void;
 }
 
@@ -36,36 +36,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const login = useCallback(async (email: string, password: string) => {
-    const res = await fetch(`${API}/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.detail ?? "Login failed");
-    }
-    const data = await res.json();
-    localStorage.setItem("oa_token", data.access_token);
-    localStorage.setItem("oa_user", JSON.stringify(data.user));
-    setState({ token: data.access_token, user: data.user });
-  }, []);
-
-  const register = useCallback(async (email: string, name: string, password: string) => {
-    const res = await fetch(`${API}/auth/register`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, name, password }),
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.detail ?? "Registration failed");
-    }
-    const data = await res.json();
-    localStorage.setItem("oa_token", data.access_token);
-    localStorage.setItem("oa_user", JSON.stringify(data.user));
-    setState({ token: data.access_token, user: data.user });
+  const setSession = useCallback((token: string, user: AuthUser) => {
+    localStorage.setItem("oa_token", token);
+    localStorage.setItem("oa_user", JSON.stringify(user));
+    setState({ token, user });
   }, []);
 
   const logout = useCallback(() => {
@@ -75,7 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ ...state, login, register, logout }}>
+    <AuthContext.Provider value={{ ...state, orcidLoginUrl: `${API}/auth/orcid/login`, setSession, logout }}>
       {children}
     </AuthContext.Provider>
   );

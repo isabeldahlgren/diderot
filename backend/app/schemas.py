@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 from typing import Optional, Any
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 
 
 class AuthorIn(BaseModel):
@@ -91,20 +91,9 @@ class CommentOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
-class UserRegister(BaseModel):
-    email: str
-    name: str
-    password: str
-
-
-class UserLogin(BaseModel):
-    email: str
-    password: str
-
-
 class UserOut(BaseModel):
     id: uuid.UUID
-    email: str
+    orcid_id: Optional[str] = None
     name: str
     created_at: datetime
 
@@ -113,6 +102,7 @@ class UserOut(BaseModel):
 
 class UserPublic(BaseModel):
     id: uuid.UUID
+    orcid_id: Optional[str] = None
     name: str
     created_at: datetime
 
