@@ -278,11 +278,6 @@ function SubmitPageInner() {
     if (!pdf) { setError("Please select a PDF file."); return; }
     if (!token) { setError("Not authenticated. Please sign in again."); return; }
     if (!subjectArea) { setError("Please select a subject area."); return; }
-    if (!authors.some((a) => a.author_type === "human")) {
-      setError("At least one human author is required. The submitting account must be listed as a human author.");
-      return;
-    }
-
     setSubmitting(true);
     setError("");
 
