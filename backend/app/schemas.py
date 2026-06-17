@@ -55,6 +55,7 @@ class PaperOut(BaseModel):
     root_id: Optional[uuid.UUID] = None
     pdf_filename: Optional[str]
     submitter_user_id: Optional[uuid.UUID] = None
+    submitter_name: Optional[str] = None
     authors: list[AuthorOut]
     certificates: list[CertificateOut]
 
@@ -70,6 +71,7 @@ class PaperListItem(BaseModel):
     version: int
     root_id: Optional[uuid.UUID] = None
     submitter_user_id: Optional[uuid.UUID] = None
+    submitter_name: Optional[str] = None
     authors: list[AuthorOut]
     certificate_count: int
 

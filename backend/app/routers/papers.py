@@ -17,7 +17,7 @@ UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR", "./uploads"))
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 
-def _to_list_item(p: Paper) -> PaperListItem:
+def _to_list_item(p: Paper, submitter_name: str | None = None) -> PaperListItem:
     return PaperListItem(
         id=p.id,
         title=p.title,
@@ -27,9 +27,18 @@ def _to_list_item(p: Paper) -> PaperListItem:
         version=p.version,
         root_id=p.root_id,
         submitter_user_id=p.submitter_user_id,
+        submitter_name=submitter_name,
         authors=p.authors,
         certificate_count=len(p.certificates),
     )
+
+
+def _submitter_names(papers: list[Paper], db: Session) -> dict:
+    ids = {p.submitter_user_id for p in papers if p.submitter_user_id}
+    if not ids:
+        return {}
+    users = db.query(User).filter(User.id.in_(ids)).all()
+    return {u.id: u.name for u in users}
 
 
 def _latest_only(query, db: Session):
@@ -123,14 +132,16 @@ async def create_paper(
 
     db.commit()
     db.refresh(paper)
-    return paper
+    result = PaperOut.model_validate(paper)
+    return result.model_copy(update={"submitter_name": current_user.name})
 
 
 @router.get("", response_model=list[PaperListItem])
 def list_papers(skip: int = 0, limit: int = 50, db: Session = Depends(get_db)):
     base = db.query(Paper).order_by(Paper.created_at.desc())
     papers = _latest_only(base, db).offset(skip).limit(limit).all()
-    return [_to_list_item(p) for p in papers]
+    names = _submitter_names(papers, db)
+    return [_to_list_item(p, names.get(p.submitter_user_id)) for p in papers]
 
 
 @router.get("/{paper_id}/versions", response_model=list[PaperListItem])
@@ -145,7 +156,8 @@ def get_paper_versions(paper_id: uuid.UUID, db: Session = Depends(get_db)):
         .order_by(Paper.version)
         .all()
     )
-    return [_to_list_item(p) for p in versions]
+    names = _submitter_names(versions, db)
+    return [_to_list_item(p, names.get(p.submitter_user_id)) for p in versions]
 
 
 @router.get("/{paper_id}", response_model=PaperOut)
@@ -153,4 +165,9 @@ def get_paper(paper_id: uuid.UUID, db: Session = Depends(get_db)):
     paper = db.query(Paper).filter(Paper.id == paper_id).first()
     if not paper:
         raise HTTPException(status_code=404, detail="Paper not found")
-    return paper
+    submitter_name = None
+    if paper.submitter_user_id:
+        user = db.query(User).filter(User.id == paper.submitter_user_id).first()
+        submitter_name = user.name if user else None
+    result = PaperOut.model_validate(paper)
+    return result.model_copy(update={"submitter_name": submitter_name})

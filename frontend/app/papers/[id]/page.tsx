@@ -51,9 +51,7 @@ export default async function PaperPage({ params }: { params: Promise<{ id: stri
     month: "long",
     day: "numeric",
   });
-  const submitter = paper.submitter_user_id
-    ? paper.authors.find((a) => a.user_id === paper.submitter_user_id)
-    : null;
+  const submitterName = paper.submitter_name ?? null;
 
   return (
     <div className="max-w-3xl">
@@ -73,7 +71,7 @@ export default async function PaperPage({ params }: { params: Promise<{ id: stri
               href={`/authors/${paper.submitter_user_id}`}
               className="font-semibold hover:underline"
             >
-              {submitter?.name ?? "unknown"}
+              {submitterName ?? "unknown"}
             </Link>
           </span>
         )}

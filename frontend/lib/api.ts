@@ -41,6 +41,7 @@ export interface Paper {
   root_id?: string;
   pdf_filename?: string;
   submitter_user_id?: string;
+  submitter_name?: string;
   authors: Author[];
   certificates: Certificate[];
 }
@@ -54,6 +55,7 @@ export interface PaperListItem {
   version: number;
   root_id?: string;
   submitter_user_id?: string;
+  submitter_name?: string;
   authors: Author[];
   certificate_count: number;
 }
