@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { getComments, addComment as apiAddComment, type Comment } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import LatexText from "@/app/LatexText";
 
 function CommentItem({ comment }: { comment: Comment }) {
   const date = new Date(comment.created_at).toLocaleDateString("en-GB", {
@@ -24,7 +25,7 @@ function CommentItem({ comment }: { comment: Comment }) {
         )}
         <span className="text-xs text-gray-400">{date}</span>
       </div>
-      <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">{comment.body}</p>
+      <LatexText text={comment.body} className="text-sm text-gray-800 leading-relaxed" />
     </div>
   );
 }

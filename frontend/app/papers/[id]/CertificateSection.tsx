@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { addCertificate, type Certificate, type IssuerType, type CertificateType } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import LatexText from "@/app/LatexText";
 
 // ── Shared: CustomSelect ────────────────────────────────────────────────────
 
@@ -134,7 +135,7 @@ function AiUsagePayloadView({ payload }: { payload: Record<string, unknown> }) {
       {humanSections && humanSections.length > 0 && (
         <FieldRow label="Human-written sections" value={humanSections.join(", ")} />
       )}
-      {notes && <FieldRow label="Notes" value={notes} />}
+      {notes && <FieldRow label="Notes" value={<LatexText text={notes} />} />}
     </div>
   );
 }
@@ -142,8 +143,7 @@ function AiUsagePayloadView({ payload }: { payload: Record<string, unknown> }) {
 function ProofVerificationPayloadView({ payload }: { payload: Record<string, unknown> }) {
   return (
     <div className="space-y-3">
-      {!!payload.scope && <FieldRow label="Scope" value={payload.scope as string} />}
-      {!!payload.notes && <FieldRow label="Notes" value={payload.notes as string} />}
+      {!!payload.comment && <FieldRow label="Comment" value={<LatexText text={payload.comment as string} />} />}
     </div>
   );
 }
@@ -182,7 +182,7 @@ function FormalVerificationPayloadView({ payload }: { payload: Record<string, un
           }
         />
       )}
-      {!!payload.notes && <FieldRow label="Notes" value={payload.notes as string} />}
+      {!!payload.notes && <FieldRow label="Notes" value={<LatexText text={payload.notes as string} />} />}
     </div>
   );
 }
@@ -200,7 +200,7 @@ function CitationCheckPayloadView({ payload }: { payload: Record<string, unknown
           }
         />
       )}
-      {!!payload.notes && <FieldRow label="Notes" value={payload.notes as string} />}
+      {!!payload.notes && <FieldRow label="Notes" value={<LatexText text={payload.notes as string} />} />}
     </div>
   );
 }
@@ -468,8 +468,7 @@ function AiUsageForm({
 // ── Form: Proof Verification ────────────────────────────────────────────────
 
 interface ProofVerificationState {
-  scope: string;
-  notes: string;
+  comment: string;
 }
 
 function ProofVerificationForm({
@@ -482,23 +481,14 @@ function ProofVerificationForm({
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-xs font-medium mb-1">Scope</label>
-        <input
-          className="w-full border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-500"
-          placeholder="e.g. all proofs, main theorem, Lemma 2.3"
-          value={state.scope}
-          onChange={(e) => onChange({ ...state, scope: e.target.value })}
-          required
-        />
-      </div>
-      <div>
-        <label className="block text-xs font-medium mb-1">Notes</label>
+        <label className="block text-xs font-medium mb-1">Comment</label>
         <textarea
           className="w-full border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-gray-500 resize-none"
-          rows={3}
-          placeholder="Describe what you checked and any caveats"
-          value={state.notes}
-          onChange={(e) => onChange({ ...state, notes: e.target.value })}
+          rows={4}
+          placeholder="State your verdict and describe what you checked, including scope and any caveats"
+          value={state.comment}
+          onChange={(e) => onChange({ ...state, comment: e.target.value })}
+          required
         />
       </div>
     </div>
@@ -668,8 +658,7 @@ export function CertificateModal({
     notes: "",
   });
   const [proofVerification, setProofVerification] = useState<ProofVerificationState>({
-    scope: "",
-    notes: "",
+    comment: "",
   });
   const [formalVerification, setFormalVerification] = useState<FormalVerificationState>({
     proof_assistant: "Lean 4",
@@ -706,8 +695,7 @@ export function CertificateModal({
         };
       case "proof_verification":
         return {
-          scope: proofVerification.scope,
-          ...(proofVerification.notes && { notes: proofVerification.notes }),
+          comment: proofVerification.comment,
         };
       case "formal_verification":
         return {
