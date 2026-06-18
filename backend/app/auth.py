@@ -49,7 +49,7 @@ def get_orcid_authorize_url(state: Optional[str] = None) -> str:
     params = {
         "client_id": ORCID_CLIENT_ID,
         "response_type": "code",
-        "scope": "/read-limited",
+        "scope": "/authenticate",
         "redirect_uri": ORCID_REDIRECT_URI,
     }
     if state:
@@ -75,15 +75,12 @@ def exchange_orcid_code(code: str) -> dict:
     return response.json()
 
 
-def fetch_orcid_emails(orcid_id: str, access_token: str) -> list[str]:
-    """Fetches email addresses from the ORCID record (public + limited visibility)."""
-    api_base = "https://api.orcid.org" if ORCID_ENV == "production" else "https://api.sandbox.orcid.org"
+def fetch_orcid_emails(orcid_id: str, access_token: str = "") -> list[str]:
+    """Fetches publicly visible email addresses from the ORCID public API."""
+    pub_base = "https://pub.orcid.org" if ORCID_ENV == "production" else "https://pub.sandbox.orcid.org"
     response = httpx.get(
-        f"{api_base}/v3.0/{orcid_id}/email",
-        headers={
-            "Accept": "application/json",
-            "Authorization": f"Bearer {access_token}",
-        },
+        f"{pub_base}/v3.0/{orcid_id}/email",
+        headers={"Accept": "application/json"},
     )
     if response.status_code != 200:
         return []

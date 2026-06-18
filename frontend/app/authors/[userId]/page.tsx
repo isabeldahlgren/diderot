@@ -149,7 +149,7 @@ export default async function AuthorPage({ params, searchParams }: { params: Pro
         )}
         {emailMismatch && (
           <p className="text-sm text-red-500 mb-2">
-            Your Diderot email does not match any email on that ORCID record. Make sure your email is set to at least &ldquo;limited&rdquo; visibility on your ORCID profile.
+            Your Diderot email does not match any email on that ORCID record. Make sure your email is set to &ldquo;public&rdquo; visibility on your ORCID profile.
           </p>
         )}
         {justLinked && (
