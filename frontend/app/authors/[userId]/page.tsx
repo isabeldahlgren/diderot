@@ -9,6 +9,7 @@ import {
   type PaperListItem,
   type Author,
 } from "@/lib/api";
+import { ProfileActions } from "./ProfileActions";
 
 function shortId(id: string): string {
   return id.replace(/-/g, "").slice(0, 8);
@@ -110,8 +111,12 @@ async function getOrcidAffiliation(orcidId: string): Promise<string | null> {
   }
 }
 
-export default async function AuthorPage({ params }: { params: Promise<{ userId: string }> }) {
+export default async function AuthorPage({ params, searchParams }: { params: Promise<{ userId: string }>; searchParams: Promise<Record<string, string>> }) {
   const { userId } = await params;
+  const sp = await searchParams;
+  const justLinked = sp.linked === "1";
+  const orcidTaken = sp.error === "orcid_taken";
+  const emailMismatch = sp.error === "email_mismatch";
 
   let user;
   let authored: PaperListItem[] = [];
@@ -139,8 +144,19 @@ export default async function AuthorPage({ params }: { params: Promise<{ userId:
         {affiliation && (
           <p className="text-sm text-gray-600 mb-1">{affiliation}</p>
         )}
+        {orcidTaken && (
+          <p className="text-sm text-red-500 mb-2">That ORCID iD is already linked to another account.</p>
+        )}
+        {emailMismatch && (
+          <p className="text-sm text-red-500 mb-2">
+            Your Diderot email does not match any email on that ORCID record. Make sure your email is set to at least &ldquo;limited&rdquo; visibility on your ORCID profile.
+          </p>
+        )}
+        {justLinked && (
+          <p className="text-sm text-green-600 mb-2">ORCID iD linked successfully.</p>
+        )}
         <p className="text-sm text-gray-400 flex items-center gap-2 flex-wrap">
-          {user.orcid_id && (
+          {user.orcid_id ? (
             <a
               href={`https://orcid.org/${user.orcid_id}`}
               target="_blank"
@@ -150,6 +166,8 @@ export default async function AuthorPage({ params }: { params: Promise<{ userId:
               <span className="text-green-600 font-bold">iD</span>
               {user.orcid_id}
             </a>
+          ) : (
+            <ProfileActions userId={userId} hasOrcid={false} />
           )}
           <span>Member since {new Date(user.created_at).toLocaleDateString("en-GB", { year: "numeric", month: "long" })}</span>
         </p>

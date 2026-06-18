@@ -1,4 +1,6 @@
 import os
+import uuid
+import logging
 from datetime import datetime, timedelta
 from typing import Optional
 from urllib.parse import urlencode
@@ -10,6 +12,8 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import User
 
+logger = logging.getLogger(__name__)
+
 SECRET_KEY = os.getenv("SECRET_KEY", "change-me-in-production")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_DAYS = 7
@@ -17,12 +21,14 @@ ACCESS_TOKEN_EXPIRE_DAYS = 7
 ORCID_CLIENT_ID = os.getenv("ORCID_CLIENT_ID", "")
 ORCID_CLIENT_SECRET = os.getenv("ORCID_CLIENT_SECRET", "")
 ORCID_REDIRECT_URI = os.getenv("ORCID_REDIRECT_URI", "http://localhost:8000/api/v1/auth/orcid/callback")
-# ORCID provides a free sandbox (sandbox.orcid.org) with the same API shape as production,
-# so local/dev environments can exercise the real OAuth flow without production credentials.
 ORCID_ENV = os.getenv("ORCID_ENV", "sandbox")
 ORCID_BASE_URL = "https://orcid.org" if ORCID_ENV == "production" else "https://sandbox.orcid.org"
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/orcid/login", auto_error=True)
+RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
+RESEND_FROM_EMAIL = os.getenv("RESEND_FROM_EMAIL", "noreply@diderot.example.com")
+APP_URL = os.getenv("APP_URL", "http://localhost:8000")
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/email/request", auto_error=True)
 
 
 def create_access_token(user_id: str) -> str:
@@ -30,22 +36,29 @@ def create_access_token(user_id: str) -> str:
     return jwt.encode({"sub": user_id, "exp": expire}, SECRET_KEY, algorithm=ALGORITHM)
 
 
-def get_orcid_authorize_url() -> str:
+def create_link_state(user_id: str) -> str:
+    expire = datetime.utcnow() + timedelta(minutes=10)
+    return jwt.encode(
+        {"sub": user_id, "action": "link_orcid", "exp": expire},
+        SECRET_KEY,
+        algorithm=ALGORITHM,
+    )
+
+
+def get_orcid_authorize_url(state: Optional[str] = None) -> str:
     params = {
         "client_id": ORCID_CLIENT_ID,
         "response_type": "code",
-        "scope": "/authenticate",
+        "scope": "/read-limited",
         "redirect_uri": ORCID_REDIRECT_URI,
     }
+    if state:
+        params["state"] = state
     return f"{ORCID_BASE_URL}/oauth/authorize?{urlencode(params)}"
 
 
 def exchange_orcid_code(code: str) -> dict:
-    """Exchanges an authorization code for the caller's ORCID iD and name.
-
-    ORCID's token endpoint returns the iD and name directly alongside the
-    access token, so no separate profile API call is needed for sign-in.
-    """
+    """Returns the full ORCID token response, including access_token, orcid, and name."""
     response = httpx.post(
         f"{ORCID_BASE_URL}/oauth/token",
         headers={"Accept": "application/json"},
@@ -60,6 +73,48 @@ def exchange_orcid_code(code: str) -> dict:
     if response.status_code != 200:
         raise HTTPException(status_code=401, detail="ORCID authentication failed")
     return response.json()
+
+
+def fetch_orcid_emails(orcid_id: str, access_token: str) -> list[str]:
+    """Fetches email addresses from the ORCID record (public + limited visibility)."""
+    api_base = "https://api.orcid.org" if ORCID_ENV == "production" else "https://api.sandbox.orcid.org"
+    response = httpx.get(
+        f"{api_base}/v3.0/{orcid_id}/email",
+        headers={
+            "Accept": "application/json",
+            "Authorization": f"Bearer {access_token}",
+        },
+    )
+    if response.status_code != 200:
+        return []
+    data = response.json()
+    return [entry["email"].lower() for entry in data.get("email", []) if entry.get("email")]
+
+
+def send_magic_link_email(to_email: str, verify_url: str) -> None:
+    if not RESEND_API_KEY:
+        logger.warning("RESEND_API_KEY not set — printing magic link to stdout")
+        print(f"\n[DEV] Magic link for {to_email}:\n  {verify_url}\n")
+        return
+
+    response = httpx.post(
+        "https://api.resend.com/emails",
+        headers={"Authorization": f"Bearer {RESEND_API_KEY}"},
+        json={
+            "from": RESEND_FROM_EMAIL,
+            "to": to_email,
+            "subject": "Sign in to Diderot",
+            "html": (
+                f"<p>Click the link below to sign in to Diderot. "
+                f"It expires in 15 minutes.</p>"
+                f'<p><a href="{verify_url}">{verify_url}</a></p>'
+                f"<p>If you did not request this, you can ignore this email.</p>"
+            ),
+        },
+    )
+    if response.status_code not in (200, 201):
+        logger.error("Resend API error: %s %s", response.status_code, response.text)
+        raise HTTPException(status_code=500, detail="Failed to send email")
 
 
 def get_current_user(
@@ -82,3 +137,7 @@ def get_current_user(
     if user is None:
         raise credentials_exc
     return user
+
+
+def get_magic_token() -> str:
+    return str(uuid.uuid4())

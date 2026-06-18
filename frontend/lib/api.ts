@@ -97,6 +97,23 @@ export async function getMe(token: string): Promise<UserPublic> {
   return res.json();
 }
 
+export async function requestMagicLink(email: string, name?: string): Promise<void> {
+  const res = await fetch(`${API}/auth/email/request`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, name }),
+  });
+  if (!res.ok) throw new Error("Failed to send sign-in link");
+}
+
+export async function getOrcidLinkUrl(token: string): Promise<{ url: string }> {
+  const res = await fetch(`${API}/auth/orcid/link-url`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error("Failed to get ORCID link URL");
+  return res.json();
+}
+
 export async function getUser(userId: string): Promise<UserPublic> {
   const res = await fetch(`${API}/users/${userId}`);
   if (!res.ok) throw new Error("User not found");

@@ -93,8 +93,15 @@ class CommentOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class MagicLinkRequest(BaseModel):
+    email: str
+    name: Optional[str] = None
+
+
 class UserOut(BaseModel):
     id: uuid.UUID
+    email: Optional[str] = None
+    email_verified: bool = False
     orcid_id: Optional[str] = None
     name: str
     created_at: datetime

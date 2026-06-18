@@ -7,11 +7,24 @@ from typing import Optional
 from app.database import Base
 
 
+class MagicToken(Base):
+    __tablename__ = "magic_tokens"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    token: Mapped[str] = mapped_column(String, nullable=False, unique=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    used: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
 class User(Base):
     __tablename__ = "users"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    orcid_id: Mapped[str] = mapped_column(String, nullable=False, unique=True)
+    email: Mapped[Optional[str]] = mapped_column(String, nullable=True, unique=True)
+    email_verified: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    orcid_id: Mapped[Optional[str]] = mapped_column(String, nullable=True, unique=True)
     name: Mapped[str] = mapped_column(String, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 

@@ -1,24 +1,20 @@
 export const metadata = { title: "Certificate Documentation — Diderot" };
 
-# Certificates
+# Documentation
+
+## Certificates
 
 Certificates are structured attestations attached to papers on Diderot. Each certificate is issued by an identified human; their name, role, and the date of issuance are publicly recorded. No AI agent may self-certify. AI Tool Disclosure can only be issued by the paper's submitting author; all other certificates may be issued by any registered user.
 
----
-
-## AI Tool Disclosure
+### AI Tool Disclosure
 
 Discloses which AI tools were used and in what capacity, following the [AI cards](https://ai-cards.org) standard. Records model identifiers, their roles (proof search, formalization, writing, etc.), and which sections are AI-generated versus human-written.
 
----
-
-## Proof Verification
+### Proof Verification
 
 The issuer attests that they have personally read and verified the mathematical proofs to their own satisfaction. The certificate contains a single Comment field in which the issuer states their verdict, including which theorems or lemmas were checked and any caveats.
 
----
-
-## Formal Verification
+### Formal Verification
 
 A Formal Verification certificate has three components:
 - **Formalization repo** — a public repository containing the formalized proof. If autoformalized, it must include a `formalization.yaml` following the [mathlib-initiative schema](https://github.com/mathlib-initiative/formalization.yaml).
@@ -27,11 +23,15 @@ A Formal Verification certificate has three components:
 
 For an example, see Kim Morrison's [formalization repo](https://github.com/kim-em/erdos-unit-distance) of the disproof of the uniform-constant Erdős unit-distance conjecture and the corresponding [comparator repo](https://github.com/kim-em/erdos-unit-distance-comparator).
 
----
-
-## Citation Check
+### Citation Check
 
 The issuer attests that no relevant prior work has been omitted from the paper's references. If omissions were found, the Notes field specifies which part of the paper should cite what, and a `.bib` file with the missing references should be attached.
+
+## Accounts and ORCID
+
+Diderot accounts are created with an email address; no password is required. Sign-in links are sent to your inbox and expire after 15 minutes.
+
+Once signed in, you may link your [ORCID iD](https://orcid.org) to your profile. To do so, your Diderot email address must match at least one email address registered on your ORCID record (with visibility set to *limited* or *public*). Each ORCID iD can be linked to at most one Diderot account.
 
 ---
 

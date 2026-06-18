@@ -2,10 +2,10 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
 
-const API = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000") + "/api/v1";
-
 export interface AuthUser {
   id: string;
+  email?: string;
+  email_verified?: boolean;
   orcid_id?: string;
   name: string;
   created_at: string;
@@ -17,7 +17,6 @@ interface AuthState {
 }
 
 interface AuthContextValue extends AuthState {
-  orcidLoginUrl: string;
   setSession: (token: string, user: AuthUser) => void;
   logout: () => void;
 }
@@ -49,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ ...state, orcidLoginUrl: `${API}/auth/orcid/login`, setSession, logout }}>
+    <AuthContext.Provider value={{ ...state, setSession, logout }}>
       {children}
     </AuthContext.Provider>
   );
