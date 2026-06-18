@@ -11,7 +11,6 @@ from app.schemas import UserOut, MagicLinkRequest
 from app.auth import (
     get_orcid_authorize_url,
     exchange_orcid_code,
-    fetch_orcid_emails,
     create_access_token,
     create_link_state,
     get_current_user,
@@ -97,11 +96,6 @@ def orcid_callback(code: str, state: Optional[str] = None, db: Session = Depends
 
     data = exchange_orcid_code(code)
     orcid_id = data["orcid"]
-    access_token = data.get("access_token", "")
-
-    orcid_emails = fetch_orcid_emails(orcid_id, access_token)
-    if not user.email or user.email.lower() not in orcid_emails:
-        return RedirectResponse(f"{FRONTEND_URL}/authors/{user_id}?error=email_mismatch")
 
     conflict = db.query(User).filter(User.orcid_id == orcid_id, User.id != user.id).first()
     if conflict:
