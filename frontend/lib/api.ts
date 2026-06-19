@@ -85,9 +85,9 @@ export async function getPaperVersions(id: string): Promise<PaperListItem[]> {
   return res.json();
 }
 
-export async function lookupUserByOrcid(orcidId: string): Promise<UserPublic> {
-  const res = await fetch(`${API}/users/lookup?orcid_id=${encodeURIComponent(orcidId)}`);
-  if (!res.ok) throw new Error("No account found with that ORCID iD");
+export async function lookupUserByEmailAndName(email: string, name: string): Promise<UserPublic> {
+  const res = await fetch(`${API}/users/lookup?email=${encodeURIComponent(email)}&name=${encodeURIComponent(name)}`);
+  if (!res.ok) throw new Error("No account found with that email and name");
   return res.json();
 }
 

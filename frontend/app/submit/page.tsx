@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { submitPaper, getPaper, lookupUserByOrcid, type AuthorType, type Paper } from "@/lib/api";
+import { submitPaper, getPaper, lookupUserByEmailAndName, type AuthorType, type Paper } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { CertificateModal } from "@/app/papers/[id]/CertificateSection";
 
@@ -106,7 +106,7 @@ interface AuthorRow {
   name: string;
   author_type: AuthorType;
   model_id: string;
-  lookup_orcid: string;
+  lookup_email: string;
   linked_user_id: string;
   linked_user_name: string;
 }
@@ -115,7 +115,7 @@ const emptyAuthor = (): AuthorRow => ({
   name: "",
   author_type: "human",
   model_id: "",
-  lookup_orcid: "",
+  lookup_email: "",
   linked_user_id: "",
   linked_user_name: "",
 });
@@ -131,7 +131,7 @@ function AuthorRowItem({
   author: AuthorRow;
   index: number;
   onChange: (i: number, field: keyof AuthorRow, value: string) => void;
-  onLookup: (i: number, orcidId: string) => void;
+  onLookup: (i: number) => void;
   onRemove: (i: number) => void;
   canRemove: boolean;
 }) {
@@ -177,17 +177,17 @@ function AuthorRowItem({
         <div className="flex items-center gap-2">
           <input
             className="flex-1 border border-gray-200 px-3 py-1 text-xs focus:outline-none focus:border-gray-400 text-gray-600 placeholder-gray-300"
-            placeholder="Link account by ORCID iD (optional, e.g. 0000-0002-1825-0097)"
-            value={author.lookup_orcid}
-            onChange={(e) => onChange(index, "lookup_orcid", e.target.value)}
-            onBlur={(e) => { if (e.target.value.trim()) onLookup(index, e.target.value.trim()); }}
-            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); if (author.lookup_orcid.trim()) onLookup(index, author.lookup_orcid.trim()); } }}
+            placeholder="Link Diderot account by email (optional)"
+            value={author.lookup_email}
+            onChange={(e) => onChange(index, "lookup_email", e.target.value)}
+            onBlur={() => { if (author.lookup_email.trim()) onLookup(index); }}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); if (author.lookup_email.trim()) onLookup(index); } }}
           />
           {author.linked_user_id && (
-            <span className="text-xs text-green-600 whitespace-nowrap">✓ {author.linked_user_name}</span>
+            <span className="text-xs text-green-600 whitespace-nowrap">linked</span>
           )}
-          {!author.linked_user_id && author.lookup_orcid && (
-            <span className="text-xs text-red-400 whitespace-nowrap">not found</span>
+          {!author.linked_user_id && author.lookup_email && (
+            <span className="text-xs text-red-400 whitespace-nowrap">no match</span>
           )}
         </div>
       )}
@@ -212,7 +212,7 @@ function SubmitPageInner() {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setAuthors((prev) =>
         prev.length === 1 && !prev[0].name
-          ? [{ name: user.name, author_type: "human", model_id: "", lookup_orcid: "", linked_user_id: "", linked_user_name: "" }]
+          ? [{ name: user.name, author_type: "human", model_id: "", lookup_email: "", linked_user_id: "", linked_user_name: "" }]
           : prev
       );
     }
@@ -239,7 +239,7 @@ function SubmitPageInner() {
           name: a.author_type === "ai" ? (a.model_version ?? a.name) : a.name,
           author_type: a.author_type,
           model_id: a.author_type === "ai" ? (a.model_version ?? a.name) : "",
-          lookup_orcid: "",
+          lookup_email: "",
           linked_user_id: "",
           linked_user_name: "",
         }))
@@ -251,14 +251,16 @@ function SubmitPageInner() {
     setAuthors((prev) => prev.map((a, idx) => {
       if (idx !== i) return a;
       const updated = { ...a, [field]: value };
-      if (field === "lookup_orcid") updated.linked_user_id = "";
+      if (field === "lookup_email" || field === "name") updated.linked_user_id = "";
       return updated;
     }));
   }
 
-  async function handleLookup(i: number, orcidId: string) {
+  async function handleLookup(i: number) {
+    const author = authors[i];
+    if (!author.lookup_email.trim() || !author.name.trim()) return;
     try {
-      const u = await lookupUserByOrcid(orcidId);
+      const u = await lookupUserByEmailAndName(author.lookup_email.trim(), author.name.trim());
       setAuthors((prev) => prev.map((a, idx) =>
         idx === i ? { ...a, linked_user_id: u.id, linked_user_name: u.name } : a
       ));
@@ -278,6 +280,8 @@ function SubmitPageInner() {
     if (!pdf) { setError("Please select a PDF file."); return; }
     if (!token) { setError("Not authenticated. Please sign in again."); return; }
     if (!subjectArea) { setError("Please select a subject area."); return; }
+    const unlinked = authors.find((a) => a.author_type === "human" && a.lookup_email.trim() && !a.linked_user_id);
+    if (unlinked) { setError(`No Diderot account found matching "${unlinked.name}" / ${unlinked.lookup_email} — verify the name and email match exactly.`); return; }
     setSubmitting(true);
     setError("");
 
@@ -409,7 +413,7 @@ function SubmitPageInner() {
               author={a}
               index={i}
               onChange={updateAuthor}
-              onLookup={handleLookup}
+              onLookup={(i) => handleLookup(i)}
               onRemove={removeAuthor}
               canRemove={authors.length > 1}
             />
