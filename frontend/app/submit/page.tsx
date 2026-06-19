@@ -218,6 +218,7 @@ function SubmitPageInner() {
     }
   }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   const [pdf, setPdf] = useState<File | null>(null);
+  const [supplementaryUrl, setSupplementaryUrl] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [submittedPaper, setSubmittedPaper] = useState<Paper | null>(null);
@@ -304,6 +305,7 @@ function SubmitPageInner() {
         pdf,
         token,
         parent_id: parentId ?? undefined,
+        supplementary_url: supplementaryUrl.trim() || undefined,
       });
       setSubmittedPaper(paper);
     } catch (err) {
@@ -441,6 +443,22 @@ function SubmitPageInner() {
               required
             />
           </label>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Link to supplementary files <span className="font-normal text-gray-400">(optional)</span>
+          </label>
+          <p className="text-xs text-gray-400 mb-2">
+            We recommend collecting paper source code and any code for numerics or figures into a single GitHub repository.
+          </p>
+          <input
+            className="w-full border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-gray-500"
+            placeholder="https://..."
+            value={supplementaryUrl}
+            onChange={(e) => setSupplementaryUrl(e.target.value)}
+            type="url"
+          />
         </div>
 
         {error && <p className="text-sm text-red-500">{error}</p>}

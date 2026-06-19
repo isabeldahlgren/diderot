@@ -43,6 +43,7 @@ class Paper(Base):
     parent_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("papers.id", ondelete="SET NULL"), nullable=True)
     root_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("papers.id", ondelete="SET NULL"), nullable=True)
     pdf_filename: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    supplementary_url: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     submitter_user_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
 
     authors: Mapped[list["Author"]] = relationship("Author", back_populates="paper", cascade="all, delete-orphan")

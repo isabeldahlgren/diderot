@@ -54,6 +54,7 @@ class PaperOut(BaseModel):
     parent_id: Optional[uuid.UUID]
     root_id: Optional[uuid.UUID] = None
     pdf_filename: Optional[str]
+    supplementary_url: Optional[str] = None
     submitter_user_id: Optional[uuid.UUID] = None
     submitter_name: Optional[str] = None
     authors: list[AuthorOut]
