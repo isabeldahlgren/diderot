@@ -151,38 +151,30 @@ function ProofVerificationPayloadView({ payload }: { payload: Record<string, unk
 function FormalVerificationPayloadView({ payload }: { payload: Record<string, unknown> }) {
   return (
     <div className="space-y-3">
-      {!!payload.proof_assistant && <FieldRow label="Proof assistant" value={payload.proof_assistant as string} />}
-      {!!payload.repository_url && (
+      {!!payload.formalization_repo_url && (
         <FieldRow
-          label="Repository"
+          label="Formalization repo"
           value={
-            <a href={payload.repository_url as string} target="_blank" rel="noopener noreferrer" className="underline text-blue-700">
-              {payload.repository_url as string}
+            <a href={payload.formalization_repo_url as string} target="_blank" rel="noopener noreferrer" className="underline text-blue-700">
+              {payload.formalization_repo_url as string}
             </a>
           }
         />
       )}
-      {!!payload.challenge_lean_url && (
+      {!!payload.comparator_repo_url && (
         <FieldRow
-          label="Challenge.lean"
+          label="Comparator repo"
           value={
-            <a href={payload.challenge_lean_url as string} target="_blank" rel="noopener noreferrer" className="underline text-blue-700">
-              {payload.challenge_lean_url as string}
+            <a href={payload.comparator_repo_url as string} target="_blank" rel="noopener noreferrer" className="underline text-blue-700">
+              {payload.comparator_repo_url as string}
             </a>
           }
         />
       )}
-      {!!payload.formalization_yaml_url && (
-        <FieldRow
-          label="formalization.yaml"
-          value={
-            <a href={payload.formalization_yaml_url as string} target="_blank" rel="noopener noreferrer" className="underline text-blue-700">
-              {payload.formalization_yaml_url as string}
-            </a>
-          }
-        />
+      {!!payload.statement_check_attested && (
+        <FieldRow label="Statement check" value="Issuer attests that Challenge.lean correctly formalizes the paper's statements with reasonable imports" />
       )}
-      {!!payload.notes && <FieldRow label="Notes" value={<LatexText text={payload.notes as string} />} />}
+      {!!payload.notes && <FieldRow label="Imports justification" value={<LatexText text={payload.notes as string} />} />}
     </div>
   );
 }
@@ -498,10 +490,9 @@ function ProofVerificationForm({
 // ── Form: Formal Verification ────────────────────────────────────────────────
 
 interface FormalVerificationState {
-  proof_assistant: string;
-  repository_url: string;
-  challenge_lean_url: string;
-  formalization_yaml_url: string;
+  formalization_repo_url: string;
+  comparator_repo_url: string;
+  statement_check_attested: boolean;
   notes: string;
 }
 
@@ -515,67 +506,51 @@ function FormalVerificationForm({
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-xs font-medium mb-1">Proof assistant</label>
-        <CustomSelect
-          value={state.proof_assistant}
-          onChange={(v) => onChange({ ...state, proof_assistant: v })}
-          options={[
-            { value: "Lean 4", label: "Lean 4" },
-            { value: "Lean 3", label: "Lean 3" },
-            { value: "Coq", label: "Coq" },
-            { value: "Isabelle", label: "Isabelle/HOL" },
-            { value: "Agda", label: "Agda" },
-            { value: "Other", label: "Other" },
-          ]}
-        />
-      </div>
-      <div>
-        <label className="block text-xs font-medium mb-1">Repository URL <span className="text-red-500">*</span></label>
+        <label className="block text-xs font-medium mb-1">Formalization repo <span className="text-red-500">*</span></label>
         <input
           type="url"
           className="w-full border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-500"
           placeholder="https://github.com/..."
-          value={state.repository_url}
-          onChange={(e) => onChange({ ...state, repository_url: e.target.value })}
+          value={state.formalization_repo_url}
+          onChange={(e) => onChange({ ...state, formalization_repo_url: e.target.value })}
           required
         />
+        <p className="text-xs text-gray-400 mt-0.5">Public repository containing the formalized proof. If autoformalized, must include a <code>formalization.yaml</code>.</p>
       </div>
       <div>
-        <label className="block text-xs font-medium mb-1">
-          Challenge.lean URL <span className="text-red-500">*</span>
-        </label>
+        <label className="block text-xs font-medium mb-1">Comparator repo <span className="text-red-500">*</span></label>
         <input
           type="url"
           className="w-full border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-500"
-          placeholder="https://github.com/.../Challenge.lean"
-          value={state.challenge_lean_url}
-          onChange={(e) => onChange({ ...state, challenge_lean_url: e.target.value })}
+          placeholder="https://github.com/..."
+          value={state.comparator_repo_url}
+          onChange={(e) => onChange({ ...state, comparator_repo_url: e.target.value })}
           required
         />
         <p className="text-xs text-gray-400 mt-0.5">
-          Must be compatible with the{" "}
+          Public repository with the{" "}
           <a href="https://github.com/leanprover/comparator" target="_blank" rel="noopener noreferrer" className="underline">
-            leanprover/comparator
-          </a>
+            comparator
+          </a>{" "}
+          verification.
         </p>
       </div>
       <div>
-        <label className="block text-xs font-medium mb-1">formalization.yaml URL</label>
-        <input
-          type="url"
-          className="w-full border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-500"
-          placeholder="https://github.com/.../formalization.yaml"
-          value={state.formalization_yaml_url}
-          onChange={(e) => onChange({ ...state, formalization_yaml_url: e.target.value })}
-        />
-        <p className="text-xs text-gray-400 mt-0.5">Required if autoformalized — see docs for expected format</p>
+        <button
+          type="button"
+          onClick={() => onChange({ ...state, statement_check_attested: !state.statement_check_attested })}
+          className="flex items-start gap-1.5 text-xs cursor-pointer select-none text-left"
+        >
+          <span className={`mt-0.5 w-3 h-3 flex-shrink-0 border flex items-center justify-center text-[7px] leading-none ${state.statement_check_attested ? "border-gray-900 bg-gray-900 text-white" : "border-gray-400 text-transparent"}`}>✓</span>
+          <span className="text-gray-700">I attest that the <code>Challenge.lean</code> file in the comparator repo correctly formalizes the corresponding statement(s) from the paper and has reasonable imports <span className="text-red-500">*</span></span>
+        </button>
       </div>
       <div>
-        <label className="block text-xs font-medium mb-1">Notes</label>
+        <label className="block text-xs font-medium mb-1">Imports beyond Mathlib <span className="text-gray-400 font-normal">(optional)</span></label>
         <textarea
           className="w-full border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-gray-500 resize-none"
           rows={2}
-          placeholder="e.g. which theorems are formalised, any gaps"
+          placeholder="Justify any imports other than Mathlib"
           value={state.notes}
           onChange={(e) => onChange({ ...state, notes: e.target.value })}
         />
@@ -661,10 +636,9 @@ export function CertificateModal({
     comment: "",
   });
   const [formalVerification, setFormalVerification] = useState<FormalVerificationState>({
-    proof_assistant: "Lean 4",
-    repository_url: "",
-    challenge_lean_url: "",
-    formalization_yaml_url: "",
+    formalization_repo_url: "",
+    comparator_repo_url: "",
+    statement_check_attested: false,
     notes: "",
   });
   const [citationCheck, setCitationCheck] = useState<CitationCheckState>({
@@ -699,10 +673,9 @@ export function CertificateModal({
         };
       case "formal_verification":
         return {
-          proof_assistant: formalVerification.proof_assistant,
-          repository_url: formalVerification.repository_url,
-          challenge_lean_url: formalVerification.challenge_lean_url,
-          ...(formalVerification.formalization_yaml_url && { formalization_yaml_url: formalVerification.formalization_yaml_url }),
+          formalization_repo_url: formalVerification.formalization_repo_url,
+          comparator_repo_url: formalVerification.comparator_repo_url,
+          statement_check_attested: formalVerification.statement_check_attested,
           ...(formalVerification.notes && { notes: formalVerification.notes }),
         };
       case "citation_check":
@@ -716,6 +689,10 @@ export function CertificateModal({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    if (certType === "formal_verification" && !formalVerification.statement_check_attested) {
+      setError("You must attest to checking the Challenge.lean statement.");
+      return;
+    }
     setSubmitting(true);
     try {
       const cert = await addCertificate(paperId, issuerType, certType, buildPayload(), token);
