@@ -6,7 +6,7 @@ from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 from sqlalchemy import text
 from app.database import engine, Base
-from app.routers import papers, certificates, auth, users, comments
+from app.routers import papers, certificates, auth, users, comments, models
 
 load_dotenv()
 
@@ -15,6 +15,7 @@ Base.metadata.create_all(bind=engine)
 with engine.connect() as conn:
     conn.execute(text("ALTER TABLE certificates ADD COLUMN IF NOT EXISTS version INTEGER NOT NULL DEFAULT 1"))
     conn.execute(text("ALTER TABLE papers ADD COLUMN IF NOT EXISTS root_id UUID REFERENCES papers(id)"))
+    conn.execute(text("ALTER TABLE papers ADD COLUMN IF NOT EXISTS supplementary_url VARCHAR"))
     conn.execute(text("ALTER TABLE authors ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES users(id)"))
     conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS orcid_id VARCHAR"))
     conn.execute(text("ALTER TABLE users DROP COLUMN IF EXISTS password_hash"))
@@ -76,3 +77,4 @@ app.include_router(certificates.router)
 app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(comments.router)
+app.include_router(models.router)

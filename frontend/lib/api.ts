@@ -145,6 +145,12 @@ export async function getUserReviewedPapers(userId: string): Promise<PaperListIt
   return res.json();
 }
 
+export async function getModelPapers(modelId: string): Promise<PaperListItem[]> {
+  const res = await fetch(`${API}/models/${modelId}`);
+  if (!res.ok) throw new Error("Failed to fetch model papers");
+  return res.json();
+}
+
 
 export interface Comment {
   id: string;

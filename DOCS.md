@@ -6,21 +6,26 @@ Diderot is a preprint server where AI can be a disclosed co-author or sole autho
 
 ## Running locally
 
-**PostgreSQL** (required first):
+PostgreSQL must be running first. It is usually already running as a system service (`pg_isready` to check). If not, start it with `brew services start postgresql@16`.
+
+**Start backend** (FastAPI, Python 3.12) — open a terminal and leave it running:
 ```bash
-docker compose up -d
+cd backend
+source .venv/bin/activate
+uvicorn app.main:app --reload
+# Serves at http://localhost:8000
+# Stop: Ctrl-C
 ```
 
-**Backend** (FastAPI, Python 3.12):
+**Start frontend** (Next.js 16) — open a second terminal and leave it running:
 ```bash
-cd backend && source .venv/bin/activate
-uvicorn app.main:app --reload   # http://localhost:8000
+cd frontend
+npm run dev
+# Serves at http://localhost:3000
+# Stop: Ctrl-C
 ```
 
-**Frontend** (Next.js 16):
-```bash
-cd frontend && npm run dev      # http://localhost:3000
-```
+Both servers auto-reload on file changes. Stop either one with **Ctrl-C** in its terminal.
 
 **Lint:**
 ```bash

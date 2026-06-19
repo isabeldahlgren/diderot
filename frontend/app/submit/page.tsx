@@ -152,7 +152,7 @@ function AuthorRowItem({
         {isAI && (
           <input
             className="flex-1 border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-500"
-            placeholder="Model ID (e.g. anthropic/claude-sonnet-4-6)"
+            placeholder="Model ID (e.g. anthropic/claude-sonnet-4.6)"
             value={author.model_id}
             onChange={(e) => onChange(index, "model_id", e.target.value)}
             required

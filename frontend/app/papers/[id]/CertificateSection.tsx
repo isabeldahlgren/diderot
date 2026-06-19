@@ -334,7 +334,7 @@ function ModelRowForm({
       <div className="flex gap-2 mb-2">
         <input
           className="flex-1 border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:border-gray-500 bg-white"
-          placeholder="Model ID (e.g. anthropic/claude-sonnet-4-6)"
+          placeholder="Model ID (e.g. anthropic/claude-sonnet-4.6)"
           value={model.model_id}
           onChange={(e) => onChange(index, "model_id", e.target.value)}
           required
