@@ -20,7 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <main className="max-w-4xl mx-auto px-6 py-10 flex-1 w-full">{children}</main>
           <footer className="mt-16">
             <div className="max-w-4xl mx-auto px-6 py-6 flex flex-col sm:flex-row gap-4 sm:gap-8 text-xs text-gray-400">
-              <span>Community: <a href="https://diderot.zulipchat.com" className="hover:text-gray-900 underline underline-offset-2">Zulip</a></span>
+              <span>Join our Zulip: <a href="https://diderot.zulipchat.com" className="hover:text-gray-900 underline underline-offset-2">diderot.zulipchat.com</a></span>
             </div>
           </footer>
         </AuthProvider>
