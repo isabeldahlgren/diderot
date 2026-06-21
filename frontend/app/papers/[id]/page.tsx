@@ -122,7 +122,7 @@ export default async function PaperPage({ params }: { params: Promise<{ id: stri
             rel="noopener noreferrer"
             className="text-sm border border-gray-800 px-3 py-1 text-gray-800 hover:bg-gray-900 hover:text-white transition-colors"
           >
-            Supplementary
+            Supplementary files
           </a>
         )}
         {paper.license && LICENSE_META[paper.license] ? (

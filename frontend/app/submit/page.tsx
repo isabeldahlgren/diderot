@@ -182,6 +182,14 @@ function AuthorRowItem({
           </button>
         )}
       </div>
+      {isAI && (
+        <p className="text-xs text-gray-400 mb-2">
+          Look up model ID at{" "}
+          <a href="https://openrouter.ai/models" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600">
+            openrouter.ai/models
+          </a>.
+        </p>
+      )}
       {!isAI && (
         <div className="flex items-center gap-2">
           <input

@@ -331,7 +331,7 @@ function ModelRowForm({
 
   return (
     <div className="p-3 border border-gray-200 mb-3 bg-gray-50">
-      <div className="flex gap-2 mb-2">
+      <div className="flex gap-2 mb-1">
         <input
           className="flex-1 border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:border-gray-500 bg-white"
           placeholder="Model ID (e.g. anthropic/claude-sonnet-4.6)"
@@ -349,6 +349,12 @@ function ModelRowForm({
           </button>
         )}
       </div>
+      <p className="text-xs text-gray-400 mb-2">
+        Look up model ID at{" "}
+        <a href="https://openrouter.ai/models" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600">
+          openrouter.ai/models
+        </a>.
+      </p>
       <div>
         <p className="text-xs text-gray-500 mb-1">Roles (select all that apply)</p>
         <div className="flex flex-wrap gap-x-3 gap-y-1">
