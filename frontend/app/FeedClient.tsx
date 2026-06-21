@@ -152,11 +152,13 @@ function PaperRow({ paper, index }: { paper: PaperListItem; index: number }) {
 
 type AuthorshipFilter = "all" | "human_only" | "ai_involved";
 type CertFilter = "any" | "has_certs";
+type SortOrder = "newest" | "most_certs";
 
 export default function FeedClient({ papers }: { papers: PaperListItem[] }) {
   const [authorship, setAuthorship] = useState<AuthorshipFilter>("all");
   const [subject, setSubject] = useState("all");
   const [certFilter, setCertFilter] = useState<CertFilter>("any");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("newest");
 
   const subjects = useMemo(() => {
     const seen = new Set<string>();
@@ -164,7 +166,7 @@ export default function FeedClient({ papers }: { papers: PaperListItem[] }) {
   }, [papers]);
 
   const filtered = useMemo(() => {
-    return papers.filter((p) => {
+    const result = papers.filter((p) => {
       const hasAI = p.authors.some((a) => a.author_type === "ai");
       if (authorship === "human_only" && hasAI) return false;
       if (authorship === "ai_involved" && !hasAI) return false;
@@ -172,33 +174,89 @@ export default function FeedClient({ papers }: { papers: PaperListItem[] }) {
       if (certFilter === "has_certs" && p.certificate_count === 0) return false;
       return true;
     });
-  }, [papers, authorship, subject, certFilter]);
+    if (sortOrder === "most_certs") {
+      return [...result].sort((a, b) => b.certificate_count - a.certificate_count);
+    }
+    return [...result].sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+  }, [papers, authorship, subject, certFilter, sortOrder]);
 
   return (
     <div>
-      <div className="flex flex-wrap gap-x-6 gap-y-2 mb-6 py-3 border-b border-gray-100 items-center">
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-400">Authorship</span>
-          <div className="flex border border-gray-200 divide-x divide-gray-200">
-            {(
-              [
-                { v: "all", label: "All" },
-                { v: "human_only", label: "Human only" },
-                { v: "ai_involved", label: "AI-involved" },
-              ] as { v: AuthorshipFilter; label: string }[]
-            ).map(({ v, label }) => (
-              <button
-                key={v}
-                onClick={() => setAuthorship(v)}
-                className={`px-2.5 py-1 text-xs transition-colors ${
-                  authorship === v
-                    ? "bg-gray-900 text-white"
-                    : "text-gray-500 hover:bg-gray-50"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
+      <div className="mb-6 border-b border-gray-100 py-3 flex flex-col gap-3">
+        <div className="flex flex-wrap gap-x-6 gap-y-2 items-center">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-400">Authorship</span>
+            <div className="flex border border-gray-200 divide-x divide-gray-200">
+              {(
+                [
+                  { v: "all", label: "All" },
+                  { v: "human_only", label: "Human only" },
+                  { v: "ai_involved", label: "With AI" },
+                ] as { v: AuthorshipFilter; label: string }[]
+              ).map(({ v, label }) => (
+                <button
+                  key={v}
+                  onClick={() => setAuthorship(v)}
+                  className={`px-2.5 py-1 text-xs transition-colors ${
+                    authorship === v
+                      ? "bg-gray-900 text-white"
+                      : "text-gray-500 hover:bg-gray-50"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-400">Certificates</span>
+            <div className="flex border border-gray-200 divide-x divide-gray-200">
+              {(
+                [
+                  { v: "any", label: "Any" },
+                  { v: "has_certs", label: "Has certificates" },
+                ] as { v: CertFilter; label: string }[]
+              ).map(({ v, label }) => (
+                <button
+                  key={v}
+                  onClick={() => setCertFilter(v)}
+                  className={`px-2.5 py-1 text-xs transition-colors ${
+                    certFilter === v
+                      ? "bg-gray-900 text-white"
+                      : "text-gray-500 hover:bg-gray-50"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-400">Sort</span>
+            <div className="flex border border-gray-200 divide-x divide-gray-200">
+              {(
+                [
+                  { v: "newest", label: "Newest" },
+                  { v: "most_certs", label: "Most certificates" },
+                ] as { v: SortOrder; label: string }[]
+              ).map(({ v, label }) => (
+                <button
+                  key={v}
+                  onClick={() => setSortOrder(v)}
+                  className={`px-2.5 py-1 text-xs transition-colors ${
+                    sortOrder === v
+                      ? "bg-gray-900 text-white"
+                      : "text-gray-500 hover:bg-gray-50"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -208,30 +266,6 @@ export default function FeedClient({ papers }: { papers: PaperListItem[] }) {
             <SubjectSelect value={subject} onChange={setSubject} options={subjects} />
           </div>
         )}
-
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-400">Certificates</span>
-          <div className="flex border border-gray-200 divide-x divide-gray-200">
-            {(
-              [
-                { v: "any", label: "Any" },
-                { v: "has_certs", label: "Has certificates" },
-              ] as { v: CertFilter; label: string }[]
-            ).map(({ v, label }) => (
-              <button
-                key={v}
-                onClick={() => setCertFilter(v)}
-                className={`px-2.5 py-1 text-xs transition-colors ${
-                  certFilter === v
-                    ? "bg-gray-900 text-white"
-                    : "text-gray-500 hover:bg-gray-50"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
       </div>
 
       {filtered.length === 0 ? (

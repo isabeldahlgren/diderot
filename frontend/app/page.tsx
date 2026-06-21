@@ -23,9 +23,9 @@ export default async function Home() {
 
       <div className="flex items-baseline justify-between mb-4 pb-4 border-b border-gray-200">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight">Recent Submissions</h1>
+          <h1 className="text-xl font-semibold tracking-tight">Submissions</h1>
           <p className="text-sm text-gray-400 mt-0.5">
-            {papers.length} paper{papers.length !== 1 ? "s" : ""}, newest first
+            {papers.length} paper{papers.length !== 1 ? "s" : ""}
           </p>
         </div>
         <Link
