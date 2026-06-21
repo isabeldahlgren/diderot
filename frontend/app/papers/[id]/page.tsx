@@ -10,6 +10,14 @@ import type { Author } from "@/lib/api";
 
 const FILES_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000") + "/files";
 
+const LICENSE_META: Record<string, { label: string; url: string }> = {
+  "cc-by-4.0": { label: "CC BY 4.0", url: "https://creativecommons.org/licenses/by/4.0/" },
+  "cc-by-sa-4.0": { label: "CC BY-SA 4.0", url: "https://creativecommons.org/licenses/by-sa/4.0/" },
+  "cc-by-nc-sa-4.0": { label: "CC BY-NC-SA 4.0", url: "https://creativecommons.org/licenses/by-nc-sa/4.0/" },
+  "cc-by-nc-nd-4.0": { label: "CC BY-NC-ND 4.0", url: "https://creativecommons.org/licenses/by-nc-nd/4.0/" },
+  "cc-zero": { label: "CC0 1.0", url: "https://creativecommons.org/publicdomain/zero/1.0/" },
+};
+
 function shortId(id: string): string {
   return id.replace(/-/g, "").slice(0, 8);
 }
@@ -117,6 +125,18 @@ export default async function PaperPage({ params }: { params: Promise<{ id: stri
             Supplementary
           </a>
         )}
+        {paper.license && LICENSE_META[paper.license] ? (
+          <a
+            href={LICENSE_META[paper.license].url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-gray-500 hover:text-gray-900 transition-colors ml-auto"
+          >
+            {LICENSE_META[paper.license].label}
+          </a>
+        ) : paper.license ? (
+          <span className="text-xs text-gray-500 ml-auto">{paper.license}</span>
+        ) : null}
       </div>
 
       {paper.pdf_filename && (

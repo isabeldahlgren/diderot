@@ -41,6 +41,7 @@ export interface Paper {
   root_id?: string;
   pdf_filename?: string;
   supplementary_url?: string;
+  license?: string;
   submitter_user_id?: string;
   submitter_name?: string;
   authors: Author[];
@@ -55,6 +56,8 @@ export interface PaperListItem {
   created_at: string;
   version: number;
   root_id?: string;
+  supplementary_url?: string;
+  license?: string;
   submitter_user_id?: string;
   submitter_name?: string;
   authors: Author[];
@@ -189,6 +192,7 @@ export async function submitPaper(data: {
   token: string;
   parent_id?: string;
   supplementary_url?: string;
+  license?: string;
 }): Promise<Paper> {
   const form = new FormData();
   form.append("title", data.title);
@@ -198,6 +202,7 @@ export async function submitPaper(data: {
   form.append("pdf", data.pdf);
   if (data.parent_id) form.append("parent_id", data.parent_id);
   if (data.supplementary_url) form.append("supplementary_url", data.supplementary_url);
+  if (data.license) form.append("license", data.license);
 
   const res = await fetch(`${API}/papers`, {
     method: "POST",

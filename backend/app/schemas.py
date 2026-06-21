@@ -55,6 +55,7 @@ class PaperOut(BaseModel):
     root_id: Optional[uuid.UUID] = None
     pdf_filename: Optional[str]
     supplementary_url: Optional[str] = None
+    license: Optional[str] = None
     submitter_user_id: Optional[uuid.UUID] = None
     submitter_name: Optional[str] = None
     authors: list[AuthorOut]
@@ -71,6 +72,8 @@ class PaperListItem(BaseModel):
     created_at: datetime
     version: int
     root_id: Optional[uuid.UUID] = None
+    supplementary_url: Optional[str] = None
+    license: Optional[str] = None
     submitter_user_id: Optional[uuid.UUID] = None
     submitter_name: Optional[str] = None
     authors: list[AuthorOut]

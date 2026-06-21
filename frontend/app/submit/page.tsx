@@ -12,6 +12,15 @@ const AUTHOR_TYPE_OPTIONS = [
   { value: "ai", label: "AI" },
 ];
 
+const LICENSE_OPTIONS = [
+  { value: "", label: "Select a license" },
+  { value: "cc-by-4.0", label: "CC BY 4.0 — Creative Commons Attribution" },
+  { value: "cc-by-sa-4.0", label: "CC BY-SA 4.0 — Attribution-ShareAlike" },
+  { value: "cc-by-nc-sa-4.0", label: "CC BY-NC-SA 4.0 — Attribution-NonCommercial-ShareAlike" },
+  { value: "cc-by-nc-nd-4.0", label: "CC BY-NC-ND 4.0 — Attribution-NonCommercial-NoDerivatives" },
+  { value: "cc-zero", label: "CC0 1.0 — Public Domain Dedication" },
+];
+
 const SUBJECT_OPTIONS = [
   { value: "", label: "Select a subject area" },
   { value: "math.AG", label: "math.AG — Algebraic Geometry" },
@@ -205,6 +214,7 @@ function SubmitPageInner() {
   const [title, setTitle] = useState("");
   const [abstract, setAbstract] = useState("");
   const [subjectArea, setSubjectArea] = useState("");
+  const [license, setLicense] = useState("");
   const [authors, setAuthors] = useState<AuthorRow[]>([emptyAuthor()]);
 
   useEffect(() => {
@@ -281,6 +291,7 @@ function SubmitPageInner() {
     if (!pdf) { setError("Please select a PDF file."); return; }
     if (!token) { setError("Not authenticated. Please sign in again."); return; }
     if (!subjectArea) { setError("Please select a subject area."); return; }
+    if (!license) { setError("Please select a license."); return; }
     const unlinked = authors.find((a) => a.author_type === "human" && a.lookup_email.trim() && !a.linked_user_id);
     if (unlinked) { setError(`No Diderot account found matching "${unlinked.name}" / ${unlinked.lookup_email} — verify the name and email match exactly.`); return; }
     setSubmitting(true);
@@ -306,6 +317,7 @@ function SubmitPageInner() {
         token,
         parent_id: parentId ?? undefined,
         supplementary_url: supplementaryUrl.trim() || undefined,
+        license: license || undefined,
       });
       setSubmittedPaper(paper);
     } catch (err) {
@@ -403,6 +415,28 @@ function SubmitPageInner() {
             value={subjectArea}
             onChange={setSubjectArea}
             options={SUBJECT_OPTIONS}
+            fullWidth
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">License</label>
+          <p className="text-xs text-gray-400 mb-2">
+            Most authors choose CC BY 4.0, which permits free reuse with attribution. See the{" "}
+            <a
+              href="https://info.arxiv.org/help/license/index.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-gray-600"
+            >
+              arXiv license guide
+            </a>{" "}
+            for a full comparison.
+          </p>
+          <CustomSelect
+            value={license}
+            onChange={setLicense}
+            options={LICENSE_OPTIONS}
             fullWidth
           />
         </div>

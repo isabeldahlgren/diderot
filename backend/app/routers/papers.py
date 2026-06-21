@@ -55,6 +55,7 @@ async def create_paper(
     pdf: UploadFile = File(...),
     parent_id: Optional[str] = Form(None),
     supplementary_url: Optional[str] = Form(None),
+    license: Optional[str] = Form(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -95,6 +96,7 @@ async def create_paper(
         subject_area=subject_area,
         pdf_filename=filename,
         supplementary_url=supplementary_url or None,
+        license=license or None,
         submitter_user_id=current_user.id,
         version=paper_version,
         parent_id=paper_parent_id,
