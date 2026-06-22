@@ -492,11 +492,11 @@ function SubmitPageInner() {
             Link to supplementary files <span className="font-normal text-gray-400">(optional)</span>
           </label>
           <p className="text-xs text-gray-400 mb-2">
-            We recommend collecting paper source code and any code for numerics or figures into a single GitHub repository.
+            Typical contents: source code, numerics, figure scripts, Lean files. To attach a full Formal Verification certificate, use the certificate form instead.
           </p>
           <input
             className="w-full border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-gray-500"
-            placeholder="https://..."
+            placeholder="https://github.com/..."
             value={supplementaryUrl}
             onChange={(e) => setSupplementaryUrl(e.target.value)}
             type="url"

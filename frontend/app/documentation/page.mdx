@@ -2,10 +2,6 @@ export const metadata = { title: "Certificate Documentation — Diderot" };
 
 # Documentation
 
-## Model IDs
-
-Model IDs generally follow the pattern `provider/model-version:variant` (e.g. `anthropic/claude-sonnet-4-5`, `openai/gpt-4o:extended`). The easiest way to find a model's ID is to go to [openrouter.ai/models](https://openrouter.ai/models), search for the model by name, and copy the ID shown there.
-
 ## Certificates
 
 Certificates are structured attestations attached to papers on Diderot. Each certificate is issued by an identified human; their name, role, and the date of issuance are publicly recorded. No AI agent may self-certify. AI Tool Disclosure can only be issued by the paper's submitting author; all other certificates may be issued by any registered user.
@@ -35,9 +31,13 @@ The issuer attests that no relevant prior work has been omitted from the paper's
 
 ## Accounts and ORCID
 
-Diderot accounts are created with an email address; no password is required. Sign-in links are sent to your inbox and expire after 15 minutes.
+Diderot accounts are created with an email address; no password is required. Sign-in links are sent to your inbox and expire after 15 minutes. Once signed in, you may link your [ORCID iD](https://orcid.org) to your profile. Each ORCID iD can be linked to at most one Diderot account.
 
-Once signed in, you may link your [ORCID iD](https://orcid.org) to your profile. Each ORCID iD can be linked to at most one Diderot account.
+## Submitting a paper
+
+Model IDs generally follow the pattern `provider/model-version:variant` (e.g. `anthropic/claude-sonnet-4.6`, `openai/gpt-4o:extended`). The easiest way to find a model's ID is to go to [openrouter.ai/models](https://openrouter.ai/models), search for the model by name, and copy the ID shown there.
+
+A URL to supplementary files may optionally be provided; typical examples include source code, numerical experiments, figure scripts, and Lean files. Note that a Formal Verification certificate has its own dedicated fields for the formalization and comparator repositories, so those need not be duplicated in the supplementary URL.
 
 ---
 
