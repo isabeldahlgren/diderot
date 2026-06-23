@@ -86,6 +86,10 @@ class CommentIn(BaseModel):
     body: str
 
 
+class CommentEdit(BaseModel):
+    body: str
+
+
 class CommentOut(BaseModel):
     id: uuid.UUID
     paper_id: uuid.UUID
@@ -93,6 +97,8 @@ class CommentOut(BaseModel):
     author_name: str
     body: str
     created_at: datetime
+    edited_at: Optional[datetime] = None
+    edit_history: Optional[list[Any]] = None
 
     model_config = {"from_attributes": True}
 

@@ -155,6 +155,11 @@ export async function getModelPapers(modelId: string): Promise<PaperListItem[]> 
 }
 
 
+export interface EditHistoryEntry {
+  body: string;
+  edited_at: string;
+}
+
 export interface Comment {
   id: string;
   paper_id: string;
@@ -162,6 +167,8 @@ export interface Comment {
   author_name: string;
   body: string;
   created_at: string;
+  edited_at?: string;
+  edit_history?: EditHistoryEntry[];
 }
 
 export async function getComments(paperId: string): Promise<Comment[]> {
@@ -179,6 +186,19 @@ export async function addComment(paperId: string, body: string, token: string): 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.detail ?? "Failed to post comment");
+  }
+  return res.json();
+}
+
+export async function editComment(paperId: string, commentId: string, body: string, token: string): Promise<Comment> {
+  const res = await fetch(`${API}/papers/${paperId}/comments/${commentId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ body }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail ?? "Failed to edit comment");
   }
   return res.json();
 }

@@ -10,16 +10,20 @@ type Segment =
 
 function parse(text: string): Segment[] {
   const segments: Segment[] = [];
-  // Match $$...$$ (display) before $...$ (inline) to avoid mis-parsing
-  const re = /\$\$([\s\S]*?)\$\$|\$((?:[^$\\]|\\.)*?)\$/g;
+  // Priority: $$...$$ and \[...\] (display), then \(...\) and $...$ (inline)
+  const re = /\$\$([\s\S]*?)\$\$|\\\[([\s\S]*?)\\\]|\\\(([\s\S]*?)\\\)|\$((?:[^$\\]|\\.)*?)\$/g;
   let last = 0;
   let m: RegExpExecArray | null;
   while ((m = re.exec(text)) !== null) {
     if (m.index > last) segments.push({ kind: "text", content: text.slice(last, m.index) });
     if (m[1] !== undefined) {
       segments.push({ kind: "math", content: m[1], display: true });
+    } else if (m[2] !== undefined) {
+      segments.push({ kind: "math", content: m[2], display: true });
+    } else if (m[3] !== undefined) {
+      segments.push({ kind: "math", content: m[3], display: false });
     } else {
-      segments.push({ kind: "math", content: m[2], display: false });
+      segments.push({ kind: "math", content: m[4], display: false });
     }
     last = re.lastIndex;
   }

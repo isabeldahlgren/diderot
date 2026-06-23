@@ -76,6 +76,8 @@ class Comment(Base):
     author_name: Mapped[str] = mapped_column(String, nullable=False)
     body: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    edited_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    edit_history: Mapped[Optional[list]] = mapped_column(JSON, nullable=True)
 
 
 class Certificate(Base):
