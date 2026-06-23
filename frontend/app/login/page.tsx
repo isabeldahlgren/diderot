@@ -40,20 +40,9 @@ export default function LoginPage() {
       <h1 className="text-2xl font-semibold mb-4">Sign in</h1>
       <p className="text-sm text-gray-500 mb-6">
         Enter your email to receive a sign-in link. No password required.
+        Returning users can leave the name field blank.
       </p>
       <form onSubmit={handleSubmit} className="space-y-3">
-        <div>
-          <label className="block text-xs text-gray-500 mb-1">
-            Name <span className="text-gray-400">(required for new accounts)</span>
-          </label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="block w-full border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-gray-900"
-            placeholder="Your full name"
-          />
-        </div>
         <div>
           <label className="block text-xs text-gray-500 mb-1">Email</label>
           <input
@@ -63,6 +52,18 @@ export default function LoginPage() {
             onChange={(e) => setEmail(e.target.value)}
             className="block w-full border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-gray-900"
             placeholder="you@example.com"
+          />
+        </div>
+        <div>
+          <label className="block text-xs text-gray-500 mb-1">
+            Name <span className="text-gray-400">(new accounts only)</span>
+          </label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="block w-full border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-gray-900"
+            placeholder="Your full name"
           />
         </div>
         {error && <p className="text-sm text-red-500">{error}</p>}
