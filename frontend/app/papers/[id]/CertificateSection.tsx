@@ -110,25 +110,15 @@ function AiUsagePayloadView({ payload }: { payload: Record<string, unknown> }) {
   const humanSections = payload.human_written_sections as string[] | undefined;
   const notes = payload.notes as string | undefined;
 
+  const modelIds = models?.map((m) => m.model_id).join(", ");
+  const allRoles = models
+    ? [...new Set(models.flatMap((m) => m.roles ?? []))].map((r) => r.replace(/_/g, " ")).join(", ")
+    : "";
+
   return (
     <div className="space-y-3">
-      {models && models.length > 0 && (
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-1.5">Models used</p>
-          <ul className="space-y-1">
-            {models.map((m, i) => (
-              <li key={i} className="text-sm text-gray-800">
-                <span className="font-mono text-gray-700">{m.model_id}</span>
-                {m.roles && m.roles.length > 0 && (
-                  <span className="text-gray-500">
-                    {" — "}{m.roles.map((r) => r.replace(/_/g, " ")).join(", ")}
-                  </span>
-                )}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+      {modelIds && <FieldRow label="Models used" value={<span className="font-mono">{modelIds}</span>} />}
+      {allRoles && <FieldRow label="Uses" value={allRoles} />}
       {aiSections && aiSections.length > 0 && (
         <FieldRow label="AI-generated sections" value={aiSections.join(", ")} />
       )}
@@ -302,84 +292,9 @@ const AI_ROLES = [
   "other",
 ] as const;
 
-interface ModelRow {
-  model_id: string;
-  roles: string[];
-}
-
-const emptyModel = (): ModelRow => ({ model_id: "", roles: [] });
-
-function ModelRowForm({
-  model,
-  index,
-  onChange,
-  onRemove,
-  canRemove,
-}: {
-  model: ModelRow;
-  index: number;
-  onChange: (i: number, field: keyof ModelRow, value: string | string[]) => void;
-  onRemove: (i: number) => void;
-  canRemove: boolean;
-}) {
-  function toggleRole(role: string) {
-    const next = model.roles.includes(role)
-      ? model.roles.filter((r) => r !== role)
-      : [...model.roles, role];
-    onChange(index, "roles", next);
-  }
-
-  return (
-    <div className="p-3 border border-gray-200 mb-3 bg-gray-50">
-      <div className="flex gap-2 mb-1">
-        <input
-          className="flex-1 border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:border-gray-500 bg-white"
-          placeholder="Model ID (e.g. anthropic/claude-sonnet-4.6)"
-          value={model.model_id}
-          onChange={(e) => onChange(index, "model_id", e.target.value)}
-          required
-        />
-        {canRemove && (
-          <button
-            type="button"
-            onClick={() => onRemove(index)}
-            className="text-xs text-gray-400 hover:text-red-500 px-1"
-          >
-            remove
-          </button>
-        )}
-      </div>
-      <p className="text-xs text-gray-400 mb-2">
-        Look up model ID at{" "}
-        <a href="https://openrouter.ai/models" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600">
-          openrouter.ai/models
-        </a>.
-      </p>
-      <div>
-        <p className="text-xs text-gray-500 mb-1">Roles (select all that apply)</p>
-        <div className="flex flex-wrap gap-x-3 gap-y-1">
-          {AI_ROLES.map((role) => {
-            const checked = model.roles.includes(role);
-            return (
-              <button
-                key={role}
-                type="button"
-                onClick={() => toggleRole(role)}
-                className="flex items-center gap-1.5 text-xs cursor-pointer select-none"
-              >
-                <span className={`w-3 h-3 flex-shrink-0 border flex items-center justify-center text-[7px] leading-none ${checked ? "border-gray-900 bg-gray-900 text-white" : "border-gray-400 text-transparent"}`}>✓</span>
-                {role.replace(/_/g, " ")}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 interface AiUsageState {
-  models: ModelRow[];
+  modelIds: string;
+  roles: string[];
   aiSections: string;
   humanSections: string;
   notes: string;
@@ -392,38 +307,52 @@ function AiUsageForm({
   state: AiUsageState;
   onChange: (s: AiUsageState) => void;
 }) {
-  function updateModel(i: number, field: keyof ModelRow, value: string | string[]) {
-    const next = state.models.map((m, idx) => (idx === i ? { ...m, [field]: value } : m));
-    onChange({ ...state, models: next });
-  }
-  function removeModel(i: number) {
-    onChange({ ...state, models: state.models.filter((_, idx) => idx !== i) });
-  }
-  function addModel() {
-    onChange({ ...state, models: [...state.models, emptyModel()] });
+  function toggleRole(role: string) {
+    const next = state.roles.includes(role)
+      ? state.roles.filter((r) => r !== role)
+      : [...state.roles, role];
+    onChange({ ...state, roles: next });
   }
 
   return (
     <div className="space-y-5">
       <div>
-        <label className="block text-xs font-medium mb-2">Models used</label>
-        {state.models.map((m, i) => (
-          <ModelRowForm
-            key={i}
-            model={m}
-            index={i}
-            onChange={updateModel}
-            onRemove={removeModel}
-            canRemove={state.models.length > 1}
-          />
-        ))}
-        <button
-          type="button"
-          onClick={addModel}
-          className="text-xs text-gray-500 hover:text-gray-900 underline"
-        >
-          + add model
-        </button>
+        <label className="block text-xs font-medium mb-1">Model IDs</label>
+        <input
+          className="w-full border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:border-gray-500"
+          placeholder="anthropic/claude-sonnet-4.6, openai/gpt-4o"
+          value={state.modelIds}
+          onChange={(e) => onChange({ ...state, modelIds: e.target.value })}
+          required
+        />
+        <p className="text-xs text-gray-400 mt-0.5">
+          Comma-separated. Look up IDs at{" "}
+          <a href="https://openrouter.ai/models" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600">
+            openrouter.ai/models
+          </a>. For disclosure guidelines, see{" "}
+          <a href="https://ai-cards.org" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600">
+            ai-cards.org
+          </a>.
+        </p>
+        <div className="mt-2">
+          <p className="text-xs text-gray-500 mb-1">Roles (select all that apply)</p>
+          <div className="flex flex-wrap gap-x-3 gap-y-1">
+            {AI_ROLES.map((role) => {
+              const checked = state.roles.includes(role);
+              return (
+                <button
+                  key={role}
+                  type="button"
+                  onClick={() => toggleRole(role)}
+                  className="flex items-center gap-1.5 text-xs cursor-pointer select-none"
+                >
+                  <span className={`w-3 h-3 flex-shrink-0 border flex items-center justify-center text-[7px] leading-none ${checked ? "border-gray-900 bg-gray-900 text-white" : "border-gray-400 text-transparent"}`}>✓</span>
+                  {role.replace(/_/g, " ")}
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -633,7 +562,8 @@ export function CertificateModal({
 
   // Per-type form state
   const [aiUsage, setAiUsage] = useState<AiUsageState>({
-    models: [emptyModel()],
+    modelIds: "",
+    roles: [],
     aiSections: "",
     humanSections: "",
     notes: "",
@@ -663,16 +593,18 @@ export function CertificateModal({
 
   function buildPayload(): Record<string, unknown> {
     switch (certType) {
-      case "ai_usage":
+      case "ai_usage": {
+        const ids = aiUsage.modelIds.split(",").map((s) => s.trim()).filter(Boolean);
         return {
-          models_used: aiUsage.models.map((m) => ({
-            model_id: m.model_id,
-            ...(m.roles.length && { roles: m.roles }),
+          models_used: ids.map((id) => ({
+            model_id: id,
+            ...(aiUsage.roles.length && { roles: aiUsage.roles }),
           })),
           ...(aiUsage.aiSections && { ai_generated_sections: splitLines(aiUsage.aiSections) }),
           ...(aiUsage.humanSections && { human_written_sections: splitLines(aiUsage.humanSections) }),
           ...(aiUsage.notes && { notes: aiUsage.notes }),
         };
+      }
       case "proof_verification":
         return {
           comment: proofVerification.comment,
