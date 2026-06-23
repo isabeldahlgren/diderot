@@ -13,9 +13,10 @@ export default function NavHeader() {
           <Link href="/" className="text-lg font-semibold tracking-tight">
             Diderot
           </Link>
-          <Link href="/about" className="sm:hidden text-sm text-gray-500 hover:text-gray-900 transition-colors">
-              About
-            </Link>
+          <div className="sm:hidden flex items-center gap-4 text-sm text-gray-500">
+            <Link href="/" className="hover:text-gray-900 transition-colors">Browse</Link>
+            <Link href="/about" className="hover:text-gray-900 transition-colors">About</Link>
+          </div>
           <nav className="hidden sm:flex items-center gap-4 text-sm text-gray-500">
             <Link href="/" className="hover:text-gray-900 transition-colors">
               Browse
