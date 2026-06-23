@@ -329,9 +329,6 @@ function AiUsageForm({
           Comma-separated. Look up IDs at{" "}
           <a href="https://openrouter.ai/models" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600">
             openrouter.ai/models
-          </a>. For disclosure guidelines, see{" "}
-          <a href="https://ai-cards.org" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600">
-            ai-cards.org
           </a>.
         </p>
         <div className="mt-2">

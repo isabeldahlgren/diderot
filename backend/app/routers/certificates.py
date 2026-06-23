@@ -14,7 +14,7 @@ VALID_ISSUER_TYPES = {"self", "human_reviewer"}
 CERT_TYPE_META: dict[str, dict[str, str]] = {
     "ai_usage": {
         "issuer_name": "AI Tool Disclosure",
-        "issuer_url": "https://ai-cards.org",
+        "issuer_url": "",
     },
     "proof_verification": {
         "issuer_name": "Proof Verification",

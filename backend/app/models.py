@@ -87,7 +87,7 @@ class Certificate(Base):
     paper_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("papers.id", ondelete="CASCADE"), nullable=False)
     certificate_type: Mapped[str] = mapped_column(String, nullable=False, default="ai-usage-cards")
     issuer_name: Mapped[str] = mapped_column(String, nullable=False, default="AI Usage Cards")
-    issuer_url: Mapped[str] = mapped_column(String, nullable=False, default="https://ai-cards.org")
+    issuer_url: Mapped[str] = mapped_column(String, nullable=False, default="")
     issuer_type: Mapped[str] = mapped_column(String, nullable=False)
     issuer_user_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     issuer_display_name: Mapped[Optional[str]] = mapped_column(String, nullable=True)
