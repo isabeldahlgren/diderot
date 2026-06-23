@@ -106,18 +106,73 @@ function FieldRow({ label, value }: { label: string; value: React.ReactNode }) {
 
 function AiUsagePayloadView({ payload }: { payload: Record<string, unknown> }) {
   const models = payload.models_used as Array<{ model_id: string; roles?: string[] }> | undefined;
-  const aiSections = payload.ai_generated_sections as string[] | undefined;
-  const humanSections = payload.human_written_sections as string[] | undefined;
   const notes = payload.notes as string | undefined;
 
-  const modelIds = models?.map((m) => m.model_id).join(", ");
+  // New schema fields
+  const proofIdeation = payload.proof_ideation as Array<{ result: string; details?: string } | string> | undefined;
+  const autonomousProofs = payload.autonomous_proofs as Array<{ result: string; details?: string } | string> | undefined;
+  const literatureReview = payload.literature_review as string | undefined;
+  const writing = payload.writing as string | undefined;
+  const presentation = payload.presentation as string | undefined;
+  const coding = payload.coding as string | undefined;
+  const experiments = payload.experiments as string | undefined;
+
+  // Legacy schema fields
+  const aiSections = payload.ai_generated_sections as string[] | undefined;
+  const humanSections = payload.human_written_sections as string[] | undefined;
   const allRoles = models
     ? [...new Set(models.flatMap((m) => m.roles ?? []))].map((r) => r.replace(/_/g, " ")).join(", ")
     : "";
 
+  const modelIds = models?.map((m) => m.model_id).join(", ");
+
   return (
     <div className="space-y-3">
       {modelIds && <FieldRow label="Models used" value={<span className="font-mono">{modelIds}</span>} />}
+      {proofIdeation && proofIdeation.length > 0 && (
+        <FieldRow
+          label="Proof ideation"
+          value={
+            <ul className="space-y-0.5">
+              {proofIdeation.map((e, i) =>
+                typeof e === "string" ? (
+                  <li key={i}>{e}</li>
+                ) : (
+                  <li key={i}>
+                    <span className="font-medium">{e.result}</span>
+                    {e.details && <span className="text-gray-500"> — {e.details}</span>}
+                  </li>
+                )
+              )}
+            </ul>
+          }
+        />
+      )}
+      {autonomousProofs && autonomousProofs.length > 0 && (
+        <FieldRow
+          label="Autonomous proofs"
+          value={
+            <ul className="space-y-0.5">
+              {autonomousProofs.map((e, i) =>
+                typeof e === "string" ? (
+                  <li key={i}>{e}</li>
+                ) : (
+                  <li key={i}>
+                    <span className="font-medium">{e.result}</span>
+                    {e.details && <span className="text-gray-500"> — {e.details}</span>}
+                  </li>
+                )
+              )}
+            </ul>
+          }
+        />
+      )}
+      {literatureReview && <FieldRow label="Literature review" value={<LatexText text={literatureReview} />} />}
+      {writing && <FieldRow label="Writing" value={<LatexText text={writing} />} />}
+      {presentation && <FieldRow label="Presentation" value={<LatexText text={presentation} />} />}
+      {coding && <FieldRow label="Coding" value={<LatexText text={coding} />} />}
+      {experiments && <FieldRow label="Experiments" value={<LatexText text={experiments} />} />}
+      {/* Legacy fields */}
       {allRoles && <FieldRow label="Uses" value={allRoles} />}
       {aiSections && aiSections.length > 0 && (
         <FieldRow label="AI-generated sections" value={aiSections.join(", ")} />
@@ -279,25 +334,109 @@ function CertificateCard({ cert }: { cert: Certificate }) {
 
 // ── Form: AI Usage Disclosure ────────────────────────────────────────────────
 
-const AI_ROLES = [
-  "proof_search",
-  "formalization",
-  "writing",
-  "paraphrasing",
-  "literature_search",
-  "figure_generation",
-  "code_generation",
-  "data_analysis",
-  "experiment_design",
-  "other",
-] as const;
+interface ProofEntry {
+  result: string;
+  details: string;
+}
+
+const emptyProofEntry = (): ProofEntry => ({ result: "", details: "" });
 
 interface AiUsageState {
   modelIds: string;
-  roles: string[];
-  aiSections: string;
-  humanSections: string;
+  proofIdeation: ProofEntry[];
+  autonomousProofs: string;
+  literatureReview: string;
+  writing: string;
+  presentation: string;
+  coding: string;
+  experiments: string;
   notes: string;
+}
+
+const AUXILIARY_FIELDS: {
+  key: keyof Omit<AiUsageState, "modelIds" | "proofIdeation" | "autonomousProofs" | "notes">;
+  label: string;
+  hint: string;
+}[] = [
+  {
+    key: "literatureReview",
+    label: "Literature review",
+    hint: "e.g. finding sources, supplementing existing citations, comparing literature",
+  },
+  {
+    key: "writing",
+    label: "Writing",
+    hint: "e.g. generating new text, improving or paraphrasing existing content, putting related work in perspective",
+  },
+  {
+    key: "presentation",
+    label: "Presentation",
+    hint: "e.g. generating figures or diagrams, improving aesthetics, finding relations between artifacts",
+  },
+  {
+    key: "coding",
+    label: "Coding",
+    hint: "e.g. generating new code, refactoring or optimising existing code, comparing aspects of code",
+  },
+  {
+    key: "experiments",
+    label: "Experiments",
+    hint: "e.g. designing experiments, editing existing setups, finding or aggregating results",
+  },
+];
+
+function ProofEntryList({
+  entries,
+  onAdd,
+  onRemove,
+  onChange,
+  addLabel,
+  detailsPlaceholder,
+}: {
+  entries: ProofEntry[];
+  onAdd: () => void;
+  onRemove: (i: number) => void;
+  onChange: (i: number, field: keyof ProofEntry, value: string) => void;
+  addLabel: string;
+  detailsPlaceholder: string;
+}) {
+  return (
+    <div className="space-y-3">
+      {entries.map((entry, i) => (
+        <div key={i} className="space-y-1">
+          <div className="flex gap-2 items-center">
+            <input
+              className="border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:border-gray-500 w-36 flex-shrink-0"
+              placeholder="Lemma 2.1"
+              value={entry.result}
+              onChange={(e) => onChange(i, "result", e.target.value)}
+            />
+            <button
+              type="button"
+              onClick={() => onRemove(i)}
+              className="text-gray-300 hover:text-gray-600 text-base px-1 leading-none"
+            >
+              ×
+            </button>
+          </div>
+          <textarea
+            className="w-full border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:border-gray-500 resize-none"
+            rows={3}
+            placeholder={detailsPlaceholder}
+            value={entry.details}
+            onChange={(e) => onChange(i, "details", e.target.value)}
+          />
+        </div>
+      ))}
+      <button
+        type="button"
+        onClick={onAdd}
+        className="text-xs text-gray-500 hover:text-gray-900 underline"
+      >
+        {addLabel}
+      </button>
+    </div>
+  );
 }
 
 function AiUsageForm({
@@ -307,17 +446,15 @@ function AiUsageForm({
   state: AiUsageState;
   onChange: (s: AiUsageState) => void;
 }) {
-  function toggleRole(role: string) {
-    const next = state.roles.includes(role)
-      ? state.roles.filter((r) => r !== role)
-      : [...state.roles, role];
-    onChange({ ...state, roles: next });
+  function updateProofEntry(i: number, key: keyof ProofEntry, value: string) {
+    const next = state.proofIdeation.map((e, j) => (j === i ? { ...e, [key]: value } : e));
+    onChange({ ...state, proofIdeation: next });
   }
 
   return (
     <div className="space-y-5">
       <div>
-        <label className="block text-xs font-medium mb-1">Model IDs</label>
+        <label className="block text-xs font-medium mb-1">Model IDs <span className="text-red-500">*</span></label>
         <input
           className="w-full border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:border-gray-500"
           placeholder="anthropic/claude-sonnet-4.6, openai/gpt-4o"
@@ -331,52 +468,52 @@ function AiUsageForm({
             openrouter.ai/models
           </a>.
         </p>
-        <div className="mt-2">
-          <p className="text-xs text-gray-500 mb-1">Roles (select all that apply)</p>
-          <div className="flex flex-wrap gap-x-3 gap-y-1">
-            {AI_ROLES.map((role) => {
-              const checked = state.roles.includes(role);
-              return (
-                <button
-                  key={role}
-                  type="button"
-                  onClick={() => toggleRole(role)}
-                  className="flex items-center gap-1.5 text-xs cursor-pointer select-none"
-                >
-                  <span className={`w-3 h-3 flex-shrink-0 border flex items-center justify-center text-[7px] leading-none ${checked ? "border-gray-900 bg-gray-900 text-white" : "border-gray-400 text-transparent"}`}>✓</span>
-                  {role.replace(/_/g, " ")}
-                </button>
-              );
-            })}
-          </div>
-        </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-xs font-medium mb-1">AI-generated sections</label>
-          <input
-            className="w-full border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-500"
-            placeholder="introduction, related work"
-            value={state.aiSections}
-            onChange={(e) => onChange({ ...state, aiSections: e.target.value })}
-          />
-          <p className="text-xs text-gray-400 mt-0.5">comma-separated</p>
-        </div>
-        <div>
-          <label className="block text-xs font-medium mb-1">Human-written sections</label>
-          <input
-            className="w-full border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-500"
-            placeholder="proof of main theorem"
-            value={state.humanSections}
-            onChange={(e) => onChange({ ...state, humanSections: e.target.value })}
-          />
-          <p className="text-xs text-gray-400 mt-0.5">comma-separated</p>
+      <div>
+        <label className="block text-xs font-medium mb-1">Results: AI-autonomous proofs</label>
+        <input
+          className="w-full border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-500"
+          placeholder="Theorem 1.2, Corollary 3.4"
+          value={state.autonomousProofs}
+          onChange={(e) => onChange({ ...state, autonomousProofs: e.target.value })}
+        />
+        <p className="text-xs text-gray-400 mt-0.5">Comma-separated. Results where AI gave the complete proof with minimal human guidance.</p>
+      </div>
+
+      <div>
+        <label className="block text-xs font-medium mb-1">Results: AI-assisted proof ideation</label>
+        <p className="text-xs text-gray-400 mb-2">Results where AI contributed proof ideas; human verified. Add one entry per result and describe the collaboration. Include information useful to others.</p>
+        <ProofEntryList
+          entries={state.proofIdeation}
+          onAdd={() => onChange({ ...state, proofIdeation: [...state.proofIdeation, emptyProofEntry()] })}
+          onRemove={(i) => onChange({ ...state, proofIdeation: state.proofIdeation.filter((_, j) => j !== i) })}
+          onChange={(i, key, val) => updateProofEntry(i, key, val)}
+          addLabel="+ add result"
+          detailsPlaceholder="e.g. AI suggested key idea, human finished proof"
+        />
+      </div>
+
+      <div>
+        <p className="text-xs font-medium mb-2">Other uses <span className="text-gray-400 font-normal">(leave blank if not applicable)</span></p>
+        <div className="space-y-3">
+          {AUXILIARY_FIELDS.map(({ key, label, hint }) => (
+            <div key={key}>
+              <label className="block text-xs font-medium mb-1">{label}</label>
+              <input
+                className="w-full border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-500"
+                placeholder="Describe how AI was used"
+                value={state[key]}
+                onChange={(e) => onChange({ ...state, [key]: e.target.value })}
+              />
+              <p className="text-xs text-gray-400 mt-0.5">{hint}</p>
+            </div>
+          ))}
         </div>
       </div>
 
       <div>
-        <label className="block text-xs font-medium mb-1">Notes</label>
+        <label className="block text-xs font-medium mb-1">Notes <span className="text-gray-400 font-normal">(optional)</span></label>
         <textarea
           className="w-full border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-gray-500 resize-none"
           rows={2}
@@ -535,9 +672,6 @@ function CitationCheckForm({
 
 // ── Certificate modal ────────────────────────────────────────────────────────
 
-function splitLines(s: string): string[] {
-  return s.split(",").map((x) => x.trim()).filter(Boolean);
-}
 
 export function CertificateModal({
   paperId,
@@ -560,9 +694,13 @@ export function CertificateModal({
   // Per-type form state
   const [aiUsage, setAiUsage] = useState<AiUsageState>({
     modelIds: "",
-    roles: [],
-    aiSections: "",
-    humanSections: "",
+    proofIdeation: [],
+    autonomousProofs: "",
+    literatureReview: "",
+    writing: "",
+    presentation: "",
+    coding: "",
+    experiments: "",
     notes: "",
   });
   const [proofVerification, setProofVerification] = useState<ProofVerificationState>({
@@ -592,13 +730,20 @@ export function CertificateModal({
     switch (certType) {
       case "ai_usage": {
         const ids = aiUsage.modelIds.split(",").map((s) => s.trim()).filter(Boolean);
+        const proofIdeation = aiUsage.proofIdeation
+          .filter((e) => e.result.trim())
+          .map((e) => ({ result: e.result.trim(), ...(e.details.trim() && { details: e.details.trim() }) }));
+        const autonomousProofs = aiUsage.autonomousProofs
+          .split(",").map((s) => s.trim()).filter(Boolean);
         return {
-          models_used: ids.map((id) => ({
-            model_id: id,
-            ...(aiUsage.roles.length && { roles: aiUsage.roles }),
-          })),
-          ...(aiUsage.aiSections && { ai_generated_sections: splitLines(aiUsage.aiSections) }),
-          ...(aiUsage.humanSections && { human_written_sections: splitLines(aiUsage.humanSections) }),
+          models_used: ids.map((id) => ({ model_id: id })),
+          ...(proofIdeation.length && { proof_ideation: proofIdeation }),
+          ...(autonomousProofs.length && { autonomous_proofs: autonomousProofs }),
+          ...(aiUsage.literatureReview && { literature_review: aiUsage.literatureReview }),
+          ...(aiUsage.writing && { writing: aiUsage.writing }),
+          ...(aiUsage.presentation && { presentation: aiUsage.presentation }),
+          ...(aiUsage.coding && { coding: aiUsage.coding }),
+          ...(aiUsage.experiments && { experiments: aiUsage.experiments }),
           ...(aiUsage.notes && { notes: aiUsage.notes }),
         };
       }
