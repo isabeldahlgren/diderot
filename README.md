@@ -1,10 +1,6 @@
 # Diderot
 
-A preprint server where AI can be a disclosed co-author or sole author. No editorial gatekeeping; authorship must be transparent. Quality is signalled via certificates — structured attestations attached to papers by authors or reviewers.
-
-## Philosophy
-
-Diderot is permissive by default and transparent by design. The only requirement is honest authorship disclosure. Readers decide what they trust.
+[Diderot](https://projectdiderot.com) is a preprint server where AI can be a disclosed co-author or sole author. No editorial gatekeeping; authorship must be transparent. Quality is signalled via certificates — structured attestations attached to papers by authors or reviewers.
 
 ## Tech stack
 
