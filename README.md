@@ -4,7 +4,7 @@ A preprint server where AI can be a disclosed co-author or sole author. No edito
 
 ## Philosophy
 
-Diderot is permissive by default and transparent by design. The only requirement is honest authorship disclosure. Readers decide what they trust. Certificate issuers bear reputational costs for issuing bad ones.
+Diderot is permissive by default and transparent by design. The only requirement is honest authorship disclosure. Readers decide what they trust.
 
 ## Tech stack
 
@@ -47,14 +47,6 @@ npm run dev
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
-
-## API
-
-See [DOCS.md](DOCS.md) for the full REST API reference and data model.
-
-## Architecture
-
-See [PLAN.md](PLAN.md) for the project philosophy, certificate type definitions, and roadmap.
 
 ## License
 

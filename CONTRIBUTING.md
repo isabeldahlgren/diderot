@@ -38,13 +38,13 @@ frontend/app/
   papers/[id]/     — paper detail page + CertificateSection, CiteButton
 ```
 
-See [DOCS.md](DOCS.md) for the full API reference and [PLAN.md](PLAN.md) for the certificate type definitions and roadmap.
+See `CLAUDE.md` for the full API reference and architecture overview.
 
 ## Adding a certificate type
 
 1. Add the type to `CERT_TYPE_META` in `backend/app/routers/certificates.py`.
 2. Add a payload renderer in `frontend/app/papers/[id]/CertificateSection.tsx`.
-3. Update the schema description in `PLAN.md` (§3).
+3. Update `CERT_TYPE_META` docstring and the payload renderer comments as needed.
 
 ## Code style
 
