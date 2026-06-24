@@ -6,6 +6,7 @@ import CertificateSection from "./CertificateSection";
 import CommentSection from "./CommentSection";
 import CiteButton from "./CiteButton";
 import VersionSection from "./VersionSection";
+import LatexText from "@/app/LatexText";
 import type { Author } from "@/lib/api";
 
 const FILES_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000") + "/files";
@@ -95,7 +96,7 @@ export default async function PaperPage({ params }: { params: Promise<{ id: stri
 
       <section className="mb-6">
         <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">Abstract</h2>
-        <p className="text-sm leading-relaxed text-gray-800">{paper.abstract}</p>
+        <LatexText text={paper.abstract} className="text-sm leading-relaxed text-gray-800" />
       </section>
 
       <div className="flex items-center gap-4 mb-8 py-3 border-t border-b border-gray-100">

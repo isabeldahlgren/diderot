@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import Link from "next/link";
 import type { PaperListItem, Author } from "@/lib/api";
+import LatexText from "@/app/LatexText";
 
 function shortId(id: string): string {
   return id.replace(/-/g, "").slice(0, 8);
@@ -121,7 +122,7 @@ function PaperRow({ paper, index }: { paper: PaperListItem; index: number }) {
       </p>
 
       <p className="text-sm text-gray-500 line-clamp-2 mb-2 leading-relaxed">
-        {paper.abstract}
+        <LatexText text={paper.abstract} />
       </p>
 
       <div className="flex gap-4 text-xs text-gray-400">
