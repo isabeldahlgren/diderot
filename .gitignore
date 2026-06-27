@@ -8,6 +8,7 @@ dist/
 .env
 DOCS.md
 PLAN.md
+idea.typ
 
 # Node
 node_modules/

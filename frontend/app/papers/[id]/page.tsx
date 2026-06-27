@@ -114,8 +114,18 @@ export default async function PaperPage({ params }: { params: Promise<{ id: stri
           <span className="text-sm text-gray-400">No PDF</span>
         )}
         <CiteButton
-          bibtex={`@misc{diderot:${shortId(paper.id)},\n  title={${paper.title}},\n  author={${paper.authors.map((a) => a.name).join(" and ")}},\n  year={${new Date(paper.created_at).getFullYear()}},\n  note={Diderot preprint OA:${shortId(paper.id)}}\n}`}
+          bibtex={`@misc{diderot:${shortId(paper.id)},\n  title={${paper.title}},\n  author={${paper.authors.map((a) => a.name).join(" and ")}},\n  year={${new Date(paper.created_at).getFullYear()}},${paper.doi ? `\n  doi={${paper.doi}},` : ""}\n  note={Diderot preprint OA:${shortId(paper.id)}}\n}`}
         />
+        {paper.doi && (
+          <a
+            href={`https://doi.org/${paper.doi}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-gray-500 hover:text-gray-900 transition-colors font-mono"
+          >
+            {paper.doi}
+          </a>
+        )}
         {paper.supplementary_url && (
           <a
             href={paper.supplementary_url}

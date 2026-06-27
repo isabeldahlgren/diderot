@@ -237,6 +237,7 @@ function SubmitPageInner() {
   }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   const [pdf, setPdf] = useState<File | null>(null);
   const [supplementaryUrl, setSupplementaryUrl] = useState("");
+  const [doi, setDoi] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [submittedPaper, setSubmittedPaper] = useState<Paper | null>(null);
@@ -326,6 +327,7 @@ function SubmitPageInner() {
         parent_id: parentId ?? undefined,
         supplementary_url: supplementaryUrl.trim() || undefined,
         license: license || undefined,
+        doi: doi.trim() || undefined,
       });
       setSubmittedPaper(paper);
     } catch (err) {
@@ -500,6 +502,21 @@ function SubmitPageInner() {
             value={supplementaryUrl}
             onChange={(e) => setSupplementaryUrl(e.target.value)}
             type="url"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            DOI <span className="font-normal text-gray-400">(optional)</span>
+          </label>
+          <p className="text-xs text-gray-400 mb-2">
+            If this paper is already published elsewhere (e.g. arXiv, Zenodo), enter the existing DOI here.
+          </p>
+          <input
+            className="w-full border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-gray-500"
+            placeholder="10.xxxx/..."
+            value={doi}
+            onChange={(e) => setDoi(e.target.value)}
           />
         </div>
 

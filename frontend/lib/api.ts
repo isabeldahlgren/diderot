@@ -42,6 +42,7 @@ export interface Paper {
   pdf_filename?: string;
   supplementary_url?: string;
   license?: string;
+  doi?: string;
   submitter_user_id?: string;
   submitter_name?: string;
   authors: Author[];
@@ -213,6 +214,7 @@ export async function submitPaper(data: {
   parent_id?: string;
   supplementary_url?: string;
   license?: string;
+  doi?: string;
 }): Promise<Paper> {
   const form = new FormData();
   form.append("title", data.title);
@@ -223,6 +225,7 @@ export async function submitPaper(data: {
   if (data.parent_id) form.append("parent_id", data.parent_id);
   if (data.supplementary_url) form.append("supplementary_url", data.supplementary_url);
   if (data.license) form.append("license", data.license);
+  if (data.doi) form.append("doi", data.doi);
 
   const res = await fetch(`${API}/papers`, {
     method: "POST",
