@@ -10,6 +10,7 @@ import {
   type Author,
 } from "@/lib/api";
 import { ProfileActions } from "./ProfileActions";
+import LatexText from "@/app/LatexText";
 
 function shortId(id: string): string {
   return id.replace(/-/g, "").slice(0, 8);
@@ -65,7 +66,7 @@ function PaperRow({ paper, index }: { paper: PaperListItem; index: number }) {
         <h2 className="text-base font-medium group-hover:underline leading-snug mb-1">{paper.title}</h2>
       </Link>
       <p className="text-sm text-gray-600 mb-1">{formatAuthors(paper.authors)}</p>
-      <p className="text-sm text-gray-500 line-clamp-2 mb-2 leading-relaxed">{paper.abstract}</p>
+      <p className="text-sm text-gray-500 line-clamp-2 mb-2 leading-relaxed"><LatexText text={paper.abstract} /></p>
       <div className="flex gap-4 text-xs text-gray-400">
         <span>Submitted {date}</span>
         {paper.certificate_count > 0 && (
