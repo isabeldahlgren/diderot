@@ -16,6 +16,7 @@ export default function NavHeader() {
           <div className="sm:hidden flex items-center gap-4 text-sm text-gray-500">
             <Link href="/" className="hover:text-gray-900 transition-colors">Browse</Link>
             <Link href="/about" className="hover:text-gray-900 transition-colors">About</Link>
+            <Link href="/roadmap" className="hover:text-gray-900 transition-colors">Roadmap</Link>
           </div>
           <nav className="hidden sm:flex items-center gap-4 text-sm text-gray-500">
             <Link href="/" className="hover:text-gray-900 transition-colors">
@@ -32,6 +33,9 @@ export default function NavHeader() {
             </Link>
             <Link href="/documentation" className="hover:text-gray-900 transition-colors">
               Documentation
+            </Link>
+            <Link href="/roadmap" className="hover:text-gray-900 transition-colors">
+              Roadmap
             </Link>
           </nav>
         </div>
