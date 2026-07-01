@@ -45,6 +45,7 @@ export interface Paper {
   doi?: string;
   submitter_user_id?: string;
   submitter_name?: string;
+  is_anonymous?: boolean;
   authors: Author[];
   certificates: Certificate[];
 }
@@ -61,6 +62,7 @@ export interface PaperListItem {
   license?: string;
   submitter_user_id?: string;
   submitter_name?: string;
+  is_anonymous?: boolean;
   authors: Author[];
   certificate_count: number;
 }
@@ -81,6 +83,14 @@ export async function listPapers(): Promise<PaperListItem[]> {
 export async function getPaper(id: string): Promise<Paper> {
   const res = await fetch(`${API}/papers/${id}`);
   if (!res.ok) throw new Error("Paper not found");
+  return res.json();
+}
+
+export async function getPaperSource(id: string, token: string): Promise<Paper> {
+  const res = await fetch(`${API}/papers/${id}/source`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error("Not the submitter of this paper");
   return res.json();
 }
 
@@ -215,6 +225,7 @@ export async function submitPaper(data: {
   supplementary_url?: string;
   license?: string;
   doi?: string;
+  anonymous?: boolean;
 }): Promise<Paper> {
   const form = new FormData();
   form.append("title", data.title);
@@ -226,6 +237,7 @@ export async function submitPaper(data: {
   if (data.supplementary_url) form.append("supplementary_url", data.supplementary_url);
   if (data.license) form.append("license", data.license);
   if (data.doi) form.append("doi", data.doi);
+  if (data.anonymous) form.append("anonymous", "true");
 
   const res = await fetch(`${API}/papers`, {
     method: "POST",

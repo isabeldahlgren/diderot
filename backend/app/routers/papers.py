@@ -8,7 +8,7 @@ from sqlalchemy import or_
 from typing import Optional
 from app.database import get_db
 from app.models import Paper, Author, User
-from app.schemas import PaperOut, PaperListItem
+from app.schemas import PaperOut, PaperListItem, AuthorOut, CertificateOut
 from app.auth import get_current_user
 
 router = APIRouter(prefix="/api/v1/papers", tags=["papers"])
@@ -17,7 +17,27 @@ UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR", "./uploads"))
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 
+def _anon_author(a: Author) -> AuthorOut:
+    # Only human authors are anonymized; AI co-authors stay fully disclosed.
+    return AuthorOut(id=a.id, paper_id=a.paper_id, name="Anonymous", author_type=a.author_type)
+
+
+def _mask_authors(authors: list[Author]) -> list[AuthorOut]:
+    return [
+        _anon_author(a) if a.author_type == "human" else AuthorOut.model_validate(a)
+        for a in authors
+    ]
+
+
+def _anon_certificate(c: CertificateOut) -> CertificateOut:
+    # Self-issued certificates would otherwise reveal the anonymous submitter.
+    if c.issuer_type == "self":
+        return c.model_copy(update={"issuer_user_id": None, "issuer_display_name": None})
+    return c
+
+
 def _to_list_item(p: Paper, submitter_name: str | None = None) -> PaperListItem:
+    anon = p.is_anonymous
     return PaperListItem(
         id=p.id,
         title=p.title,
@@ -26,11 +46,24 @@ def _to_list_item(p: Paper, submitter_name: str | None = None) -> PaperListItem:
         created_at=p.created_at,
         version=p.version,
         root_id=p.root_id,
-        submitter_user_id=p.submitter_user_id,
-        submitter_name=submitter_name,
-        authors=p.authors,
+        submitter_user_id=None if anon else p.submitter_user_id,
+        submitter_name=None if anon else submitter_name,
+        is_anonymous=anon,
+        authors=_mask_authors(p.authors) if anon else p.authors,
         certificate_count=len(p.certificates),
     )
+
+
+def _to_paper_out(p: Paper, submitter_name: str | None) -> PaperOut:
+    result = PaperOut.model_validate(p)
+    if p.is_anonymous:
+        return result.model_copy(update={
+            "submitter_user_id": None,
+            "submitter_name": None,
+            "authors": _mask_authors(p.authors),
+            "certificates": [_anon_certificate(c) for c in result.certificates],
+        })
+    return result.model_copy(update={"submitter_name": submitter_name})
 
 
 def _submitter_names(papers: list[Paper], db: Session) -> dict:
@@ -57,6 +90,7 @@ async def create_paper(
     supplementary_url: Optional[str] = Form(None),
     license: Optional[str] = Form(None),
     doi: Optional[str] = Form(None),
+    anonymous: bool = Form(False),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -100,6 +134,7 @@ async def create_paper(
         license=license or None,
         doi=doi or None,
         submitter_user_id=current_user.id,
+        is_anonymous=anonymous,
         version=paper_version,
         parent_id=paper_parent_id,
         root_id=paper_root_id,
@@ -138,8 +173,7 @@ async def create_paper(
 
     db.commit()
     db.refresh(paper)
-    result = PaperOut.model_validate(paper)
-    return result.model_copy(update={"submitter_name": current_user.name})
+    return _to_paper_out(paper, current_user.name)
 
 
 @router.get("", response_model=list[PaperListItem])
@@ -175,5 +209,21 @@ def get_paper(paper_id: uuid.UUID, db: Session = Depends(get_db)):
     if paper.submitter_user_id:
         user = db.query(User).filter(User.id == paper.submitter_user_id).first()
         submitter_name = user.name if user else None
+    return _to_paper_out(paper, submitter_name)
+
+
+@router.get("/{paper_id}/source", response_model=PaperOut)
+def get_paper_source(
+    paper_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Unmasked paper data for the submitter only — used to pre-fill a revision
+    (which may itself be anonymous or not) even when the paper is anonymous."""
+    paper = db.query(Paper).filter(Paper.id == paper_id).first()
+    if not paper:
+        raise HTTPException(status_code=404, detail="Paper not found")
+    if paper.submitter_user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Only the paper's submitter can access the source")
     result = PaperOut.model_validate(paper)
-    return result.model_copy(update={"submitter_name": submitter_name})
+    return result.model_copy(update={"submitter_name": current_user.name})

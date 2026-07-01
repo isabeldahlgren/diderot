@@ -47,6 +47,7 @@ class Paper(Base):
     license: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     doi: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     submitter_user_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    is_anonymous: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="false")
 
     authors: Mapped[list["Author"]] = relationship("Author", back_populates="paper", cascade="all, delete-orphan")
     certificates: Mapped[list["Certificate"]] = relationship("Certificate", back_populates="paper", cascade="all, delete-orphan")

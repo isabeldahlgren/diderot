@@ -97,7 +97,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       <h1 className="text-2xl font-semibold mb-6">{children}</h1>
     ),
     h2: ({ children }) => (
-      <h2 className="font-semibold mb-1 mt-8 text-sm">{children}</h2>
+      <h2 className="text-lg font-semibold mt-10 mb-3">{children}</h2>
     ),
     h3: ({ children }) => (
       <h3 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2 mt-8">

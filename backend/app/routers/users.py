@@ -33,7 +33,8 @@ def get_user_papers(user_id: uuid.UUID, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="User not found")
     authored_ids = db.query(Author.paper_id).filter(Author.user_id == user_id).subquery()
     base = db.query(Paper).filter(
-        or_(Paper.submitter_user_id == user_id, Paper.id.in_(authored_ids))
+        Paper.is_anonymous.is_(False),
+        or_(Paper.submitter_user_id == user_id, Paper.id.in_(authored_ids)),
     ).order_by(Paper.created_at.desc())
     papers = _latest_only(base, db).all()
     return [_to_list_item(p) for p in papers]
@@ -45,7 +46,10 @@ def get_user_authored_papers(user_id: uuid.UUID, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     authored_ids = db.query(Author.paper_id).filter(Author.user_id == user_id).subquery()
-    base = db.query(Paper).filter(Paper.id.in_(authored_ids)).order_by(Paper.created_at.desc())
+    base = db.query(Paper).filter(
+        Paper.is_anonymous.is_(False),
+        Paper.id.in_(authored_ids),
+    ).order_by(Paper.created_at.desc())
     papers = _latest_only(base, db).all()
     return [_to_list_item(p) for p in papers]
 
@@ -55,7 +59,10 @@ def get_user_submitted_papers(user_id: uuid.UUID, db: Session = Depends(get_db))
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    base = db.query(Paper).filter(Paper.submitter_user_id == user_id).order_by(Paper.created_at.desc())
+    base = db.query(Paper).filter(
+        Paper.submitter_user_id == user_id,
+        Paper.is_anonymous.is_(False),
+    ).order_by(Paper.created_at.desc())
     papers = _latest_only(base, db).all()
     return [_to_list_item(p) for p in papers]
 

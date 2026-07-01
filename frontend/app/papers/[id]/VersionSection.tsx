@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
-import type { PaperListItem } from "@/lib/api";
+import { getPaperSource, type PaperListItem } from "@/lib/api";
 
 export default function VersionSection({
   paperId,
@@ -13,8 +14,21 @@ export default function VersionSection({
   submitterUserId?: string;
   versions: PaperListItem[];
 }) {
-  const { user } = useAuth();
-  const isSubmitter = !!user && user.id === submitterUserId;
+  const { user, token } = useAuth();
+  // For anonymous papers the submitter is not exposed publicly, so ask the
+  // backend whether the signed-in user is the submitter.
+  const [anonSubmitter, setAnonSubmitter] = useState(false);
+
+  useEffect(() => {
+    if (submitterUserId || !user || !token) return;
+    let active = true;
+    getPaperSource(paperId, token)
+      .then(() => { if (active) setAnonSubmitter(true); })
+      .catch(() => {});
+    return () => { active = false; };
+  }, [paperId, submitterUserId, user, token]);
+
+  const isSubmitter = (!!user && user.id === submitterUserId) || anonSubmitter;
 
   if (versions.length <= 1 && !isSubmitter) return null;
 

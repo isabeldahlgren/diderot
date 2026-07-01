@@ -6,6 +6,7 @@ from app.database import get_db
 from app.models import Paper, Certificate, User
 from app.schemas import CertificateIn, CertificateOut
 from app.auth import get_current_user
+from app.routers.papers import _anon_certificate
 
 router = APIRouter(prefix="/api/v1/papers", tags=["certificates"])
 
@@ -78,7 +79,8 @@ def add_certificate(
     db.add(cert)
     db.commit()
     db.refresh(cert)
-    return cert
+    out = CertificateOut.model_validate(cert)
+    return _anon_certificate(out) if paper.is_anonymous else out
 
 
 @router.get("/{paper_id}/certificates", response_model=list[CertificateOut])
@@ -86,4 +88,7 @@ def list_certificates(paper_id: uuid.UUID, db: Session = Depends(get_db)):
     paper = db.query(Paper).filter(Paper.id == paper_id).first()
     if not paper:
         raise HTTPException(status_code=404, detail="Paper not found")
-    return paper.certificates
+    certs = [CertificateOut.model_validate(c) for c in paper.certificates]
+    if paper.is_anonymous:
+        return [_anon_certificate(c) for c in certs]
+    return certs

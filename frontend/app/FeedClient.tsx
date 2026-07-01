@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, type ReactNode } from "react";
 import Link from "next/link";
 import type { PaperListItem, Author } from "@/lib/api";
 import LatexText from "@/app/LatexText";
@@ -64,23 +64,40 @@ function SubjectSelect({
   );
 }
 
-function AuthorList({ authors }: { authors: Author[] }) {
+function AuthorList({ authors, anonymous }: { authors: Author[]; anonymous?: boolean }) {
+  const shown = anonymous ? authors.filter((a) => a.author_type === "ai") : authors;
+  const items: ReactNode[] = [];
+  if (anonymous) {
+    const n = authors.filter((a) => a.author_type === "human").length;
+    if (n > 0) {
+      items.push(
+        <span key="anon" className="text-gray-500">
+          {n} human author{n !== 1 ? "s" : ""}
+        </span>
+      );
+    }
+  }
+  shown.forEach((a) => {
+    items.push(
+      a.author_type === "ai" ? (
+        <Link key={a.id} href={`/models/${a.name}`} className="text-purple-600 hover:underline">
+          {a.name}
+        </Link>
+      ) : a.user_id ? (
+        <Link key={a.id} href={`/authors/${a.user_id}`} className="hover:underline">
+          {a.name}
+        </Link>
+      ) : (
+        <span key={a.id}>{a.name}</span>
+      )
+    );
+  });
   return (
     <span>
-      {authors.map((a, i) => (
-        <span key={a.id}>
+      {items.map((item, i) => (
+        <span key={i}>
           {i > 0 && <span className="text-gray-300 mx-1">·</span>}
-          {a.author_type === "ai" ? (
-            <Link href={`/models/${a.name}`} className="text-purple-600 hover:underline">
-              {a.name}
-            </Link>
-          ) : a.user_id ? (
-            <Link href={`/authors/${a.user_id}`} className="hover:underline">
-              {a.name}
-            </Link>
-          ) : (
-            <span>{a.name}</span>
-          )}
+          {item}
         </span>
       ))}
     </span>
@@ -118,7 +135,7 @@ function PaperRow({ paper, index }: { paper: PaperListItem; index: number }) {
       </Link>
 
       <p className="text-sm text-gray-600 mb-1">
-        <AuthorList authors={paper.authors} />
+        <AuthorList authors={paper.authors} anonymous={paper.is_anonymous} />
       </p>
 
       <p className="text-sm text-gray-500 line-clamp-2 mb-2 leading-relaxed">
@@ -127,19 +144,19 @@ function PaperRow({ paper, index }: { paper: PaperListItem; index: number }) {
 
       <div className="flex gap-4 text-xs text-gray-400">
         <span>Submitted {date}</span>
-        {paper.submitter_user_id && (() => {
-          return (
-            <span>
-              by{" "}
-              <Link
-                href={`/authors/${paper.submitter_user_id}`}
-                className="text-gray-700 font-medium hover:underline"
-              >
-                {paper.submitter_name ?? "unknown"}
-              </Link>
-            </span>
-          );
-        })()}
+        {paper.is_anonymous ? (
+          <span>by Anonymous</span>
+        ) : paper.submitter_user_id ? (
+          <span>
+            by{" "}
+            <Link
+              href={`/authors/${paper.submitter_user_id}`}
+              className="text-gray-700 font-medium hover:underline"
+            >
+              {paper.submitter_name ?? "unknown"}
+            </Link>
+          </span>
+        ) : null}
         <span>v{paper.version}</span>
         {paper.certificate_count > 0 && (
           <span className="text-green-700">

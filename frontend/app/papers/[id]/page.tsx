@@ -23,23 +23,40 @@ function shortId(id: string): string {
   return id.replace(/-/g, "").slice(0, 8);
 }
 
-function formatAuthorLine(authors: Author[]): ReactNode {
+function formatAuthorLine(authors: Author[], anonymous?: boolean): ReactNode {
+  const shown = anonymous ? authors.filter((a) => a.author_type === "ai") : authors;
+  const items: ReactNode[] = [];
+  if (anonymous) {
+    const n = authors.filter((a) => a.author_type === "human").length;
+    if (n > 0) {
+      items.push(
+        <span key="anon" className="text-gray-500">
+          {n} human author{n !== 1 ? "s" : ""}
+        </span>
+      );
+    }
+  }
+  shown.forEach((a) => {
+    items.push(
+      a.author_type === "ai" ? (
+        <Link key={a.id} href={`/models/${a.name}`} className="text-purple-700 hover:underline">
+          {a.name}
+        </Link>
+      ) : a.user_id ? (
+        <Link key={a.id} href={`/authors/${a.user_id}`} className="hover:underline">
+          {a.name}
+        </Link>
+      ) : (
+        <span key={a.id}>{a.name}</span>
+      )
+    );
+  });
   return (
     <span>
-      {authors.map((a, i) => (
-        <span key={a.id}>
+      {items.map((item, i) => (
+        <span key={i}>
           {i > 0 && <span className="text-gray-300 mx-1">·</span>}
-          {a.author_type === "ai" ? (
-            <Link href={`/models/${a.name}`} className="text-purple-700 hover:underline">
-              {a.name}
-            </Link>
-          ) : a.user_id ? (
-            <Link href={`/authors/${a.user_id}`} className="hover:underline">
-              {a.name}
-            </Link>
-          ) : (
-            <span>{a.name}</span>
-          )}
+          {item}
         </span>
       ))}
     </span>
@@ -75,7 +92,9 @@ export default async function PaperPage({ params }: { params: Promise<{ id: stri
         </span>
         <span className="text-xs">v{paper.version}</span>
         <span className="text-xs">Submitted {submittedDate}</span>
-        {paper.submitter_user_id && (
+        {paper.is_anonymous ? (
+          <span className="text-xs">by Anonymous</span>
+        ) : paper.submitter_user_id ? (
           <span className="text-xs">
             by{" "}
             <Link
@@ -85,13 +104,13 @@ export default async function PaperPage({ params }: { params: Promise<{ id: stri
               {submitterName ?? "unknown"}
             </Link>
           </span>
-        )}
+        ) : null}
       </div>
 
       <h1 className="text-2xl font-semibold leading-snug mb-3">{paper.title}</h1>
 
       <p className="text-sm text-gray-700 mb-6">
-        {formatAuthorLine(paper.authors)}
+        {formatAuthorLine(paper.authors, paper.is_anonymous)}
       </p>
 
       <section className="mb-6">

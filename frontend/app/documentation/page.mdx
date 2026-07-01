@@ -1,45 +1,46 @@
-export const metadata = { title: "Certificate Documentation — Diderot" };
+export const metadata = { title: "Documentation — Diderot" };
 
 # Documentation
 
 ## Certificates
 
-Certificates are structured attestations attached to papers on Diderot. Each certificate is issued by an identified human; their name, role, and the date of issuance are publicly recorded. No AI agent may self-certify. AI Tool Disclosure can only be issued by the paper's submitting author; all other certificates may be issued by any registered user.
+Certificates are structured attestations attached to a paper. Each one is issued by an identified human — their name, role, and issue date are public. AI agents cannot self-certify.
 
-### AI Tool Disclosure
+- **AI Tool Disclosure** — which AI tools were used and how: model IDs, their roles (proof search, formalization, writing, …), and which sections are AI- versus human-written. Only the submitting author may issue it. Inspired by [AI Cards](https://ai-cards.org).
+- **Proof Verification** — the issuer states they have personally read and verified the proofs, noting which results were checked and any caveats.
+- **Formal Verification** — a machine-checked formalization; see below.
+- **Citation Check** — the issuer attests that no relevant prior work is missing. Omissions are listed in a Notes field, with a `.bib` file of the missing references attached.
 
-Discloses which AI tools were used and in what capacity (inspired by [AI Cards](https://ai-cards.org)). Records model identifiers, their roles (proof search, formalization, writing, etc.), and which sections are AI-generated versus human-written.
-
-### Proof Verification
-
-The issuer attests that they have personally read and verified the mathematical proofs to their own satisfaction. The certificate contains a single Comment field in which the issuer states their verdict, including which theorems or lemmas were checked and any caveats.
+Every certificate except AI Tool Disclosure may be issued by any registered user.
 
 ### Formal Verification
 
-A Formal Verification certificate has three components:
-- **Formalization repo** — a public repository containing the formalized proof. If autoformalized, it must include a `formalization.yaml` following the [mathlib-initiative schema](https://github.com/mathlib-initiative/formalization.yaml).
+A Formal Verification certificate has three parts:
+
+- **Formalization repo** — a public repository with the formalized proof. If autoformalized, include a `formalization.yaml` following the [mathlib-initiative schema](https://github.com/mathlib-initiative/formalization.yaml).
 - **Comparator repo** — a public repository with the [comparator](https://github.com/leanprover/comparator) verification.
-- **Human attestation** — by submitting this certificate, the issuer attests that the `Challenge.lean` file in the comparator repo correctly formalizes the corresponding statement(s) from the paper and has reasonable imports.
+- **Human attestation** — the issuer attests that the `Challenge.lean` file correctly formalizes the paper's statement(s) and has reasonable imports.
 
-The `Challenge.lean` file should import only Mathlib, or a small set of explicitly approved repositories. Imports beyond Mathlib defeat the purpose of the certificate: if `Challenge.lean` can pull in arbitrary code, auditors have no way to assess what has actually been verified. Any imports other than Mathlib must be justified in the Notes field.
+`Challenge.lean` should import only Mathlib, or a small set of approved repositories; any other import must be justified in the Notes field, otherwise auditors cannot tell what was actually verified. For an example, see Kim Morrison's [formalization repo](https://github.com/kim-em/erdos-unit-distance) and [comparator repo](https://github.com/kim-em/erdos-unit-distance-comparator) for the disproof of the Erdős unit-distance conjecture.
 
-For an example, see Kim Morrison's [formalization repo](https://github.com/kim-em/erdos-unit-distance) of the disproof of the uniform-constant Erdős unit-distance conjecture and the corresponding [comparator repo](https://github.com/kim-em/erdos-unit-distance-comparator).
+## Accounts
 
-### Citation Check
-
-The issuer attests that no relevant prior work has been omitted from the paper's references. If omissions were found, the Notes field specifies which part of the paper should cite what, and a `.bib` file with the missing references should be attached.
-
-## Accounts and ORCID
-
-Diderot accounts are created with an email address; no password is required. Sign-in links are sent to your inbox and expire after 15 minutes. Once signed in, you may link your [ORCID iD](https://orcid.org) to your profile. Each ORCID iD can be linked to at most one Diderot account.
+Sign up with an email address — no password. Sign-in links are emailed to you and expire after 15 minutes. Optionally link your [ORCID iD](https://orcid.org) to your profile. Each ORCID iD maps to one Diderot account.
 
 ## Submitting a paper
 
-Model IDs generally follow the pattern `provider/model-version:variant` (e.g. `anthropic/claude-sonnet-4.6`, `openai/gpt-4o:extended`). The easiest way to find a model's ID is to go to [openrouter.ai/models](https://openrouter.ai/models), search for the model by name, and copy the ID shown there.
+- **Model IDs** follow the pattern `provider/model-version:variant` (e.g. `anthropic/claude-sonnet-4.6`). Look them up at [openrouter.ai/models](https://openrouter.ai/models).
+- **Supplementary files** — optionally link source code, numerics, figure scripts, or Lean files. The Formal Verification certificate has its own repository fields, so there is no need to duplicate them here.
+- **DOI** — if the paper is also on arXiv, Zenodo, or a journal, add its existing DOI; it appears on the paper page and in the BibTeX citation. Native DOI minting is planned.
 
-A URL to supplementary files may optionally be provided; typical examples include source code, numerical experiments, figure scripts, and Lean files. Note that a Formal Verification certificate has its own dedicated fields for the formalization and comparator repositories, so those need not be duplicated in the supplementary URL.
+<span id="anonymous-submission" />
 
-If the paper is also posted elsewhere (e.g. arXiv, Zenodo, a journal), you may enter the existing DOI at submission time. It will be displayed on the paper page and included in the BibTeX citation. Native DOI minting for Diderot-first submissions is a planned feature.
+### Anonymous submission
+
+- Human authors are hidden and shown as a **count** — e.g. "2 human authors" — rather than by name, and the paper is hidden from your author profile.
+- AI co-authors stay fully disclosed. What matters is that the *type* of each author (human or AI) stays transparent, even when identities are withheld.
+- You remain the recorded submitter internally (never shown publicly), so you can still issue an AI Tool Disclosure certificate and post new versions.
+- Anonymity is per version: a new version can switch between anonymous and named via the checkbox on the submission form.
 
 ---
 

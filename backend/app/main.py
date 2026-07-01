@@ -16,6 +16,7 @@ with engine.connect() as conn:
     conn.execute(text("ALTER TABLE certificates ADD COLUMN IF NOT EXISTS version INTEGER NOT NULL DEFAULT 1"))
     conn.execute(text("ALTER TABLE papers ADD COLUMN IF NOT EXISTS root_id UUID REFERENCES papers(id)"))
     conn.execute(text("ALTER TABLE papers ADD COLUMN IF NOT EXISTS supplementary_url VARCHAR"))
+    conn.execute(text("ALTER TABLE papers ADD COLUMN IF NOT EXISTS is_anonymous BOOLEAN NOT NULL DEFAULT FALSE"))
     conn.execute(text("ALTER TABLE authors ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES users(id)"))
     conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS orcid_id VARCHAR"))
     conn.execute(text("ALTER TABLE users DROP COLUMN IF EXISTS password_hash"))

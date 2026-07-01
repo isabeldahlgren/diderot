@@ -55,23 +55,40 @@ function parseModelId(modelId: string): { provider: string; modelName: string; d
   return { provider, modelName, displayName: `${modelName} by ${provider}` };
 }
 
-function formatAuthors(authors: Author[]): ReactNode {
+function formatAuthors(authors: Author[], anonymous?: boolean): ReactNode {
+  const shown = anonymous ? authors.filter((a) => a.author_type === "ai") : authors;
+  const items: ReactNode[] = [];
+  if (anonymous) {
+    const n = authors.filter((a) => a.author_type === "human").length;
+    if (n > 0) {
+      items.push(
+        <span key="anon" className="text-gray-500">
+          {n} human author{n !== 1 ? "s" : ""}
+        </span>
+      );
+    }
+  }
+  shown.forEach((a) => {
+    items.push(
+      a.author_type === "ai" ? (
+        <Link key={a.id} href={`/models/${a.name}`} className="text-purple-700 hover:underline">
+          {a.name}
+        </Link>
+      ) : a.user_id ? (
+        <Link key={a.id} href={`/authors/${a.user_id}`} className="hover:underline">
+          {a.name}
+        </Link>
+      ) : (
+        <span key={a.id}>{a.name}</span>
+      )
+    );
+  });
   return (
     <span>
-      {authors.map((a, i) => (
-        <span key={a.id}>
+      {items.map((item, i) => (
+        <span key={i}>
           {i > 0 && <span className="text-gray-300 mx-1">·</span>}
-          {a.author_type === "ai" ? (
-            <Link href={`/models/${a.name}`} className="text-purple-700 hover:underline">
-              {a.name}
-            </Link>
-          ) : a.user_id ? (
-            <Link href={`/authors/${a.user_id}`} className="hover:underline">
-              {a.name}
-            </Link>
-          ) : (
-            <span>{a.name}</span>
-          )}
+          {item}
         </span>
       ))}
     </span>
@@ -97,7 +114,9 @@ function PaperRow({ paper, index }: { paper: PaperListItem; index: number }) {
       <Link href={`/papers/${paper.id}`} className="group">
         <h2 className="text-base font-medium group-hover:underline leading-snug mb-1">{paper.title}</h2>
       </Link>
-      <p className="text-sm text-gray-600 mb-1">{formatAuthors(paper.authors)}</p>
+      <p className="text-sm text-gray-600 mb-1">
+        {formatAuthors(paper.authors, paper.is_anonymous)}
+      </p>
       <p className="text-sm text-gray-500 line-clamp-2 mb-2 leading-relaxed"><LatexText text={paper.abstract} /></p>
       <div className="flex gap-4 text-xs text-gray-400">
         <span>Submitted {date}</span>

@@ -59,6 +59,7 @@ class PaperOut(BaseModel):
     doi: Optional[str] = None
     submitter_user_id: Optional[uuid.UUID] = None
     submitter_name: Optional[str] = None
+    is_anonymous: bool = False
     authors: list[AuthorOut]
     certificates: list[CertificateOut]
 
@@ -77,6 +78,7 @@ class PaperListItem(BaseModel):
     license: Optional[str] = None
     submitter_user_id: Optional[uuid.UUID] = None
     submitter_name: Optional[str] = None
+    is_anonymous: bool = False
     authors: list[AuthorOut]
     certificate_count: int
 

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { submitPaper, getPaper, lookupUserByEmailAndName, type AuthorType, type Paper } from "@/lib/api";
+import { submitPaper, getPaperSource, lookupUserByEmailAndName, type AuthorType, type Paper } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { CertificateModal } from "@/app/papers/[id]/CertificateSection";
 
@@ -238,6 +238,7 @@ function SubmitPageInner() {
   const [pdf, setPdf] = useState<File | null>(null);
   const [supplementaryUrl, setSupplementaryUrl] = useState("");
   const [doi, setDoi] = useState("");
+  const [anonymous, setAnonymous] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [submittedPaper, setSubmittedPaper] = useState<Paper | null>(null);
@@ -248,12 +249,13 @@ function SubmitPageInner() {
   }, [user, router]);
 
   useEffect(() => {
-    if (!parentId) return;
-    getPaper(parentId).then((p) => {
+    if (!parentId || !token) return;
+    getPaperSource(parentId, token).then((p) => {
       setParentPaper(p);
       setTitle(p.title);
       setAbstract(p.abstract);
       setSubjectArea(p.subject_area);
+      setAnonymous(p.is_anonymous ?? false);
       setAuthors(
         p.authors.map((a) => ({
           name: a.author_type === "ai" ? (a.model_version ?? a.name) : a.name,
@@ -265,7 +267,7 @@ function SubmitPageInner() {
         }))
       );
     }).catch(() => {});
-  }, [parentId]);
+  }, [parentId, token]);
 
   function updateAuthor(i: number, field: keyof AuthorRow, value: string) {
     setAuthors((prev) => prev.map((a, idx) => {
@@ -328,6 +330,7 @@ function SubmitPageInner() {
         supplementary_url: supplementaryUrl.trim() || undefined,
         license: license || undefined,
         doi: doi.trim() || undefined,
+        anonymous,
       });
       setSubmittedPaper(paper);
     } catch (err) {
@@ -518,6 +521,37 @@ function SubmitPageInner() {
             value={doi}
             onChange={(e) => setDoi(e.target.value)}
           />
+        </div>
+
+        <div>
+          <button
+            type="button"
+            role="checkbox"
+            aria-checked={anonymous}
+            onClick={() => setAnonymous((a) => !a)}
+            className="group flex w-fit cursor-pointer select-none items-center gap-2.5"
+          >
+            <span
+              className={`flex h-[18px] w-[18px] items-center justify-center border transition-colors group-focus-visible:ring-2 group-focus-visible:ring-gray-400 group-focus-visible:ring-offset-1 ${
+                anonymous ? "border-gray-900 bg-gray-900" : "border-gray-300 bg-white group-hover:border-gray-500"
+              }`}
+            >
+              {anonymous && (
+                <svg viewBox="0 0 12 12" className="h-3 w-3 text-white" fill="none" stroke="currentColor" strokeWidth={2.2}>
+                  <path d="M2.5 6.5 5 9l4.5-5.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              )}
+            </span>
+            <span className="text-sm font-medium">Submit anonymously</span>
+          </button>
+          <p className="ml-7 mt-1.5 text-xs text-gray-400">
+            Human authors are shown as a count (e.g. &ldquo;2 human authors&rdquo;); AI authors stay
+            disclosed. See the{" "}
+            <Link href="/documentation#anonymous-submission" className="underline hover:text-gray-600">
+              documentation
+            </Link>
+            .
+          </p>
         </div>
 
         {error && <p className="text-sm text-red-500">{error}</p>}
