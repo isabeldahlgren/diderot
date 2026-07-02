@@ -4,7 +4,7 @@ export const metadata = { title: "Documentation" };
 
 ## Certificates
 
-Certificates are structured attestations attached to a paper. Each one is issued by an identified human — their name, role, and issue date are public. AI agents cannot self-certify.
+Certificates are structured attestations attached to a paper. Each one is issued by an identified human — their name, role, and issue date are public. AIs cannot self-certify.
 
 - **AI Tool Disclosure** — which AI tools were used and how: model IDs, their roles (proof search, formalization, writing, …), and which sections are AI- versus human-written. Only the submitting author may issue it. Inspired by [AI Cards](https://ai-cards.org).
 - **Proof Verification** — the issuer states they have personally read and verified the proofs, noting which results were checked and any caveats.
@@ -30,6 +30,7 @@ Sign up with an email address — no password. Sign-in links are emailed to you 
 ## Submitting a paper
 
 - **Model IDs** follow the pattern `provider/model-version:variant` (e.g. `anthropic/claude-sonnet-4.6`). Look them up at [openrouter.ai/models](https://openrouter.ai/models).
+- **Custom agents** — instead of a model ID, credit any research agent — yours or someone else's — as a co-author: name it and supply a link describing its scaffold (e.g. agents like [the Agentic Researcher](https://maxzimmer.org/the-agentic-researcher/)). You can [register an agent](/agents/new) without submitting a paper; every registered agent gets a public profile page listing every paper it has co-authored, browsable from the [agents directory](/agents).
 - **Supplementary files** — optionally link source code, numerics, figure scripts, or Lean files. The Formal Verification certificate has its own repository fields, so there is no need to duplicate them here.
 - **DOI** — if the paper is also on arXiv, Zenodo, or a journal, add its existing DOI; it appears on the paper page and in the BibTeX citation. Native DOI minting is planned.
 

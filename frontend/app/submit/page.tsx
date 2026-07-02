@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { submitPaper, getPaperSource, lookupUserByEmailAndName, type AuthorType, type Paper } from "@/lib/api";
+import { submitPaper, getPaperSource, lookupUserByEmailAndName, searchAgents, type AuthorType, type AgentPublic, type Paper } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { CertificateModal } from "@/app/papers/[id]/CertificateSection";
 
@@ -111,6 +111,8 @@ function CustomSelect({
   );
 }
 
+type AIMode = "model" | "agent";
+
 interface AuthorRow {
   name: string;
   author_type: AuthorType;
@@ -118,6 +120,10 @@ interface AuthorRow {
   lookup_email: string;
   linked_user_id: string;
   linked_user_name: string;
+  ai_mode: AIMode;
+  agent_id: string;
+  agent_name: string;
+  agent_description_url: string;
 }
 
 const emptyAuthor = (): AuthorRow => ({
@@ -127,7 +133,17 @@ const emptyAuthor = (): AuthorRow => ({
   lookup_email: "",
   linked_user_id: "",
   linked_user_name: "",
+  ai_mode: "model",
+  agent_id: "",
+  agent_name: "",
+  agent_description_url: "",
 });
+
+function modePillClass(active: boolean): string {
+  return `text-xs px-2 py-1 border transition-colors ${
+    active ? "border-gray-900 bg-gray-900 text-white" : "border-gray-300 text-gray-500 hover:border-gray-500"
+  }`;
+}
 
 function AuthorRowItem({
   author,
@@ -145,9 +161,44 @@ function AuthorRowItem({
   canRemove: boolean;
 }) {
   const isAI = author.author_type === "ai";
+  const isAgentMode = isAI && author.ai_mode === "agent";
+  const [agentResults, setAgentResults] = useState<AgentPublic[]>([]);
+  const [agentDropdownOpen, setAgentDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    if (!isAgentMode || author.agent_id || !author.agent_name.trim()) {
+      return;
+    }
+    const handle = setTimeout(() => {
+      searchAgents(author.agent_name.trim())
+        .then((results) => {
+          setAgentResults(results);
+          setAgentDropdownOpen(results.length > 0);
+        })
+        .catch(() => setAgentResults([]));
+    }, 250);
+    return () => clearTimeout(handle);
+  }, [isAgentMode, author.agent_id, author.agent_name]);
+
+  function selectAgent(agent: AgentPublic) {
+    onChange(index, "agent_id", agent.id);
+    onChange(index, "agent_name", agent.name);
+    onChange(index, "agent_description_url", agent.description_url);
+    setAgentDropdownOpen(false);
+  }
 
   return (
     <div className="p-4 border border-gray-200 mb-3">
+      {isAI && (
+        <div className="flex gap-2 mb-3">
+          <button type="button" onClick={() => onChange(index, "ai_mode", "model")} className={modePillClass(!isAgentMode)}>
+            Model ID
+          </button>
+          <button type="button" onClick={() => onChange(index, "ai_mode", "agent")} className={modePillClass(isAgentMode)}>
+            Custom agent
+          </button>
+        </div>
+      )}
       <div className="flex gap-3 mb-3">
         {!isAI && (
           <input
@@ -158,7 +209,7 @@ function AuthorRowItem({
             required
           />
         )}
-        {isAI && (
+        {isAI && !isAgentMode && (
           <input
             className="flex-1 border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-500"
             placeholder="Model ID (e.g. anthropic/claude-sonnet-4.6)"
@@ -166,6 +217,37 @@ function AuthorRowItem({
             onChange={(e) => onChange(index, "model_id", e.target.value)}
             required
           />
+        )}
+        {isAgentMode && (
+          <div className="flex-1 relative">
+            <input
+              className="w-full border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-500"
+              placeholder="Agent name"
+              value={author.agent_name}
+              onChange={(e) => {
+                onChange(index, "agent_name", e.target.value);
+                onChange(index, "agent_id", "");
+                onChange(index, "agent_description_url", "");
+              }}
+              onFocus={() => { if (!author.agent_id && agentResults.length > 0) setAgentDropdownOpen(true); }}
+              onBlur={() => setTimeout(() => setAgentDropdownOpen(false), 150)}
+              required
+            />
+            {agentDropdownOpen && agentResults.length > 0 && (
+              <div className="absolute z-10 top-full left-0 mt-0.5 w-full border border-gray-300 bg-white shadow-sm max-h-48 overflow-y-auto">
+                {agentResults.map((a) => (
+                  <button
+                    key={a.id}
+                    type="button"
+                    onMouseDown={() => selectAgent(a)}
+                    className="block w-full text-left px-3 py-1.5 text-sm hover:bg-gray-50 text-gray-700"
+                  >
+                    {a.name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         )}
         <CustomSelect
           value={author.author_type}
@@ -182,13 +264,37 @@ function AuthorRowItem({
           </button>
         )}
       </div>
-      {isAI && (
+      {isAI && !isAgentMode && (
         <p className="text-xs text-gray-400 mb-2">
           Look up model ID at{" "}
           <a href="https://openrouter.ai/models" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600">
             openrouter.ai/models
           </a>.
         </p>
+      )}
+      {isAgentMode && (
+        author.agent_id ? (
+          <p className="text-xs text-green-600 mb-2">
+            Reusing existing agent, linked to{" "}
+            <a href={author.agent_description_url} target="_blank" rel="noopener noreferrer" className="underline">
+              {author.agent_description_url}
+            </a>.
+          </p>
+        ) : (
+          <div className="mb-2">
+            <input
+              className="w-full border border-gray-200 px-3 py-1 text-xs focus:outline-none focus:border-gray-400 text-gray-600 placeholder-gray-300"
+              placeholder="Link describing the agent (GitHub repo, paper, etc.)"
+              type="url"
+              value={author.agent_description_url}
+              onChange={(e) => onChange(index, "agent_description_url", e.target.value)}
+              required
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              No matching agent found — this will register a new one. The link will be shown on the agent&apos;s public profile.
+            </p>
+          </div>
+        )
       )}
       {!isAI && (
         <div className="flex items-center gap-2">
@@ -230,7 +336,7 @@ function SubmitPageInner() {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setAuthors((prev) =>
         prev.length === 1 && !prev[0].name
-          ? [{ name: user.name, author_type: "human", model_id: "", lookup_email: "", linked_user_id: "", linked_user_name: "" }]
+          ? [{ ...emptyAuthor(), name: user.name, author_type: "human" }]
           : prev
       );
     }
@@ -258,12 +364,13 @@ function SubmitPageInner() {
       setAnonymous(p.is_anonymous ?? false);
       setAuthors(
         p.authors.map((a) => ({
-          name: a.author_type === "ai" ? (a.model_version ?? a.name) : a.name,
+          ...emptyAuthor(),
+          name: a.author_type === "ai" && !a.agent_id ? (a.model_version ?? a.name) : a.name,
           author_type: a.author_type,
-          model_id: a.author_type === "ai" ? (a.model_version ?? a.name) : "",
-          lookup_email: "",
-          linked_user_id: "",
-          linked_user_name: "",
+          model_id: a.author_type === "ai" && !a.agent_id ? (a.model_version ?? a.name) : "",
+          ai_mode: a.agent_id ? "agent" : "model",
+          agent_id: a.agent_id ?? "",
+          agent_name: a.author_type === "ai" && a.agent_id ? a.name : "",
         }))
       );
     }).catch(() => {});
@@ -305,6 +412,8 @@ function SubmitPageInner() {
     if (!license) { setError("Please select a license."); return; }
     const unlinked = authors.find((a) => a.author_type === "human" && a.lookup_email.trim() && !a.linked_user_id);
     if (unlinked) { setError(`No Diderot account found matching "${unlinked.name}" / ${unlinked.lookup_email} — verify the name and email match exactly.`); return; }
+    const unregisteredAgent = authors.find((a) => a.author_type === "ai" && a.ai_mode === "agent" && !a.agent_id && !a.agent_description_url.trim());
+    if (unregisteredAgent) { setError(`Provide a link describing the agent "${unregisteredAgent.agent_name || "(unnamed)"}", or select an existing agent from the dropdown.`); return; }
     setSubmitting(true);
     setError("");
 
@@ -314,6 +423,15 @@ function SubmitPageInner() {
         abstract,
         subject_area: subjectArea,
         authors: authors.map((a) => {
+          if (a.author_type === "ai" && a.ai_mode === "agent") {
+            return {
+              name: a.agent_name,
+              author_type: a.author_type,
+              agent_id: a.agent_id || undefined,
+              agent_name: a.agent_id ? undefined : a.agent_name,
+              agent_description_url: a.agent_id ? undefined : a.agent_description_url,
+            };
+          }
           const slashIdx = a.model_id.indexOf("/");
           const provider = slashIdx > -1 ? a.model_id.slice(0, slashIdx) : undefined;
           return {

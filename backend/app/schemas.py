@@ -14,12 +14,29 @@ class AuthorIn(BaseModel):
     provider: Optional[str] = None
     contribution: Optional[str] = None
     user_id: Optional[uuid.UUID] = None
+    agent_id: Optional[uuid.UUID] = None
 
 
 class AuthorOut(AuthorIn):
     id: uuid.UUID
     paper_id: uuid.UUID
     user_id: Optional[uuid.UUID] = None
+    agent_id: Optional[uuid.UUID] = None
+
+
+class AgentIn(BaseModel):
+    name: str
+    description_url: str
+
+
+class AgentPublic(BaseModel):
+    id: uuid.UUID
+    name: str
+    description_url: str
+    created_at: datetime
+    paper_count: int = 0
+
+    model_config = {"from_attributes": True}
 
 
 class CertificateIn(BaseModel):

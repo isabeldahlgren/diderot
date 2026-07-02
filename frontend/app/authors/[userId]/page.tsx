@@ -23,12 +23,9 @@ function formatAuthors(authors: Author[]): ReactNode {
         <span key={a.id}>
           {i > 0 && <span className="text-gray-300 mx-1">·</span>}
           {a.author_type === "ai" ? (
-            <span>
-              <Link href={`/models/${a.name}`} className="text-purple-700 hover:underline">
-                {a.name}
-              </Link>
-              <span className="text-xs text-purple-400 ml-0.5">(AI)</span>
-            </span>
+            <Link href={a.agent_id ? `/agents/${a.agent_id}` : `/models/${a.name}`} className="text-purple-700 hover:underline">
+              {a.name}
+            </Link>
           ) : a.user_id ? (
             <Link href={`/authors/${a.user_id}`} className="hover:underline">
               {a.name}

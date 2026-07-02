@@ -53,6 +53,15 @@ class Paper(Base):
     certificates: Mapped[list["Certificate"]] = relationship("Certificate", back_populates="paper", cascade="all, delete-orphan")
 
 
+class Agent(Base):
+    __tablename__ = "agents"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    description_url: Mapped[str] = mapped_column(String, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
 class Author(Base):
     __tablename__ = "authors"
 
@@ -65,6 +74,7 @@ class Author(Base):
     provider: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     contribution: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     user_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    agent_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("agents.id", ondelete="SET NULL"), nullable=True)
 
     paper: Mapped["Paper"] = relationship("Paper", back_populates="authors")
 

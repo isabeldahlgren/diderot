@@ -41,7 +41,7 @@ function formatAuthorLine(authors: Author[], anonymous?: boolean): ReactNode {
   shown.forEach((a) => {
     items.push(
       a.author_type === "ai" ? (
-        <Link key={a.id} href={`/models/${a.name}`} className="text-purple-700 hover:underline">
+        <Link key={a.id} href={a.agent_id ? `/agents/${a.agent_id}` : `/models/${a.name}`} className="text-purple-700 hover:underline">
           {a.name}
         </Link>
       ) : a.user_id ? (

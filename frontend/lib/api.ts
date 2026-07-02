@@ -14,6 +14,7 @@ export interface Author {
   provider?: string;
   contribution?: string;
   user_id?: string;
+  agent_id?: string;
 }
 
 export interface Certificate {
@@ -72,6 +73,14 @@ export interface UserPublic {
   orcid_id?: string;
   name: string;
   created_at: string;
+}
+
+export interface AgentPublic {
+  id: string;
+  name: string;
+  description_url: string;
+  created_at: string;
+  paper_count: number;
 }
 
 export async function listPapers(): Promise<PaperListItem[]> {
@@ -165,6 +174,43 @@ export async function getModelPapers(modelId: string): Promise<PaperListItem[]> 
   return res.json();
 }
 
+export async function listAgents(): Promise<AgentPublic[]> {
+  const res = await fetch(`${API}/agents`);
+  if (!res.ok) throw new Error("Failed to fetch agents");
+  return res.json();
+}
+
+export async function registerAgent(name: string, description_url: string, token: string): Promise<AgentPublic> {
+  const res = await fetch(`${API}/agents`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ name, description_url }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail ?? "Failed to register agent");
+  }
+  return res.json();
+}
+
+export async function searchAgents(query: string): Promise<AgentPublic[]> {
+  const res = await fetch(`${API}/agents/search?q=${encodeURIComponent(query)}`);
+  if (!res.ok) throw new Error("Failed to search agents");
+  return res.json();
+}
+
+export async function getAgent(agentId: string): Promise<AgentPublic> {
+  const res = await fetch(`${API}/agents/${agentId}`);
+  if (!res.ok) throw new Error("Agent not found");
+  return res.json();
+}
+
+export async function getAgentPapers(agentId: string): Promise<PaperListItem[]> {
+  const res = await fetch(`${API}/agents/${agentId}/papers`);
+  if (!res.ok) throw new Error("Failed to fetch agent papers");
+  return res.json();
+}
+
 
 export interface EditHistoryEntry {
   body: string;
@@ -218,7 +264,7 @@ export async function submitPaper(data: {
   title: string;
   abstract: string;
   subject_area: string;
-  authors: Omit<Author, "id" | "paper_id">[];
+  authors: (Omit<Author, "id" | "paper_id"> & { agent_name?: string; agent_description_url?: string })[];
   pdf: File;
   token: string;
   parent_id?: string;

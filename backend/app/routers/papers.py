@@ -4,10 +4,10 @@ import uuid
 from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.orm import Session
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 from typing import Optional
 from app.database import get_db
-from app.models import Paper, Author, User
+from app.models import Paper, Author, User, Agent
 from app.schemas import PaperOut, PaperListItem, AuthorOut, CertificateOut
 from app.auth import get_current_user
 
@@ -77,6 +77,18 @@ def _submitter_names(papers: list[Paper], db: Session) -> dict:
 def _latest_only(query, db: Session):
     superseded = db.query(Paper.parent_id).filter(Paper.parent_id.isnot(None)).subquery()
     return query.filter(~Paper.id.in_(superseded))
+
+
+def get_or_create_agent(db: Session, name: str, description_url: str) -> Agent:
+    """Case-insensitive dedup: reusing an existing agent name wins over registering a duplicate."""
+    name = name.strip()
+    existing = db.query(Agent).filter(func.lower(Agent.name) == name.lower()).first()
+    if existing:
+        return existing
+    agent = Agent(name=name, description_url=description_url.strip())
+    db.add(agent)
+    db.flush()
+    return agent
 
 
 @router.post("", response_model=PaperOut)
@@ -159,6 +171,18 @@ async def create_paper(
                 linked_user_id = None
         else:
             linked_user_id = None
+        agent_id = None
+        if a["author_type"] == "ai":
+            provided_agent_id = a.get("agent_id")
+            if provided_agent_id:
+                try:
+                    candidate_agent_id = uuid.UUID(str(provided_agent_id))
+                    if db.query(Agent).filter(Agent.id == candidate_agent_id).first():
+                        agent_id = candidate_agent_id
+                except (ValueError, AttributeError):
+                    agent_id = None
+            elif a.get("agent_name") and a.get("agent_description_url"):
+                agent_id = get_or_create_agent(db, a["agent_name"], a["agent_description_url"]).id
         author = Author(
             paper_id=paper.id,
             name=a["name"],
@@ -168,6 +192,7 @@ async def create_paper(
             provider=a.get("provider"),
             contribution=a.get("contribution"),
             user_id=linked_user_id,
+            agent_id=agent_id,
         )
         db.add(author)
 

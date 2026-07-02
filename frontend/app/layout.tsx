@@ -35,6 +35,7 @@ const footerSiteLinks = [
   { href: "/about", label: "About" },
   { href: "/principles", label: "Principles" },
   { href: "/documentation", label: "Documentation" },
+  { href: "/agents", label: "Agents" },
   { href: "/roadmap", label: "Roadmap" },
 ];
 
