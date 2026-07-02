@@ -53,19 +53,26 @@ Next.js App Router. Server components fetch directly from the backend; client co
 
 - `lib/api.ts` — all backend calls go through here; typed wrappers over `fetch`
 - `lib/auth.tsx` — `AuthProvider` + `useAuth`; localStorage hydration deferred to `useEffect` (avoids SSR hydration mismatch)
+- `lib/site.ts` — site constants (`SITE_URL` from `NEXT_PUBLIC_SITE_URL`, name, description, Zulip/GitHub URLs); use these instead of hardcoding URLs
+- `layout.tsx` — root layout; site-wide metadata (title template `%s — Diderot`, `metadataBase`, OpenGraph, RSS alternate) and the footer (site + community link columns)
 - `page.tsx` — server component, arXiv-style chronological feed
-- `about/page.tsx` — static About page
+- `FeedClient.tsx` — client component, feed search (title/authors/abstract) + filters (authorship, certificates, subject, sort)
+- `about/page.mdx`, `principles/page.mdx`, `documentation/page.mdx`, `roadmap/page.mdx` — static MDX pages; export a short `metadata.title` (the layout template appends "— Diderot"); custom MDX components (`Cite`, `References`) live in `mdx-components.tsx`
 - `submit/page.tsx` — client component, paper submission form (multipart POST)
-- `papers/[id]/page.tsx` — server component, paper detail (arXiv-style header, inline authors, Access row)
+- `papers/[id]/page.tsx` — server component, paper detail (arXiv-style header, inline authors, Access row); `generateMetadata` emits Google Scholar `citation_*` meta tags + OpenGraph, and the page body includes JSON-LD `ScholarlyArticle`
 - `papers/[id]/CertificateSection.tsx` — client component, certificate list + add form; human-readable payload renderers per certificate type
 - `papers/[id]/CiteButton.tsx` — client component, copies BibTeX to clipboard
+- `feed.xml/route.ts` — RSS 2.0 feed of the 50 newest submissions (force-dynamic)
+- `sitemap.ts` / `robots.ts` — sitemap (static pages + all papers) and robots.txt
+
+**Anonymity invariant:** the API returns human author names even for anonymous papers; every public surface (page rendering, `generateMetadata`, JSON-LD, RSS, feed search) must filter them out when `is_anonymous` is set — show only AI authors plus a human-author count. Follow the existing `publicAuthorNames` / `authorLine` / `matchesQuery` helpers when adding new surfaces.
 
 **Next.js version is 16** — APIs and conventions may differ from training data. Check `node_modules/next/dist/docs/` before using Next.js-specific APIs.
 
 ## Data model key points
 
 - `author_type`: `"human"` | `"ai"` | `"human+ai"` — no restriction on ratios; a paper can have zero human authors
-- `Certificate.certificate_type`: `"ai_usage"` | `"peer_review"` | `"code_availability"` | `"data_availability"` — determines `issuer_name`/`issuer_url` and which payload schema is expected
+- `Certificate.certificate_type`: `"ai_usage"` | `"proof_verification"` | `"formal_verification"` | `"citation_check"` — determines `issuer_name`/`issuer_url` and which payload schema is expected
 - `Certificate.payload`: JSONB, stored verbatim; each type has a defined schema (see `routers/certificates.py` → `CERT_TYPE_META` and the payload renderers in `CertificateSection.tsx`)
 - `Certificate.issuer_type`: `"self"` (paper author) | `"human_reviewer"` — only humans can issue certificates; AI agents cannot self-certify
 - `Paper.parent_id`: nullable UUID linking to previous version (versioning, not yet exposed in UI)
@@ -73,7 +80,7 @@ Next.js App Router. Server components fetch directly from the backend; client co
 ## Deployment
 
 - **Backend**: Railway — set env vars (`RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `SECRET_KEY`, `DATABASE_URL`, etc.) in the Railway dashboard.
-- **Frontend**: Vercel — set env vars (`NEXT_PUBLIC_API_URL`, etc.) in the Vercel dashboard.
+- **Frontend**: Vercel — set env vars (`NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_SITE_URL`, etc.) in the Vercel dashboard. `NEXT_PUBLIC_SITE_URL` feeds `lib/site.ts` and defaults to `https://projectdiderot.com`; it determines canonical URLs in metadata, the RSS feed, and the sitemap.
 
 ## Style
 

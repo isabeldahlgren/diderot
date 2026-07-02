@@ -1,7 +1,9 @@
 import type { ReactNode } from "react";
-import { getPaper, getPaperVersions } from "@/lib/api";
+import type { Metadata } from "next";
+import { getPaper, getPaperVersions, type Paper } from "@/lib/api";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { SITE_URL, SITE_NAME } from "@/lib/site";
 import CertificateSection from "./CertificateSection";
 import CommentSection from "./CommentSection";
 import CiteButton from "./CiteButton";
@@ -63,6 +65,65 @@ function formatAuthorLine(authors: Author[], anonymous?: boolean): ReactNode {
   );
 }
 
+// Author names respecting anonymity: human names are withheld on anonymous versions.
+function publicAuthorNames(paper: Paper): string[] {
+  const shown = paper.is_anonymous
+    ? paper.authors.filter((a) => a.author_type === "ai")
+    : paper.authors;
+  return shown.map((a) => a.name);
+}
+
+function truncate(text: string, max: number): string {
+  return text.length <= max ? text : text.slice(0, max - 1).trimEnd() + "…";
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  let paper: Paper;
+  try {
+    paper = await getPaper(id);
+  } catch {
+    return { title: "Paper not found" };
+  }
+
+  const description = truncate(paper.abstract, 240);
+  const created = new Date(paper.created_at);
+  const publicationDate = `${created.getFullYear()}/${created.getMonth() + 1}/${created.getDate()}`;
+  const canonicalUrl = `${SITE_URL}/papers/${paper.id}`;
+
+  // Google Scholar indexing tags (Highwire Press format).
+  const scholarTags: Record<string, string | string[]> = {
+    citation_title: paper.title,
+    citation_author: publicAuthorNames(paper),
+    citation_publication_date: publicationDate,
+    citation_online_date: publicationDate,
+    citation_abstract_html_url: canonicalUrl,
+    citation_technical_report_institution: SITE_NAME,
+  };
+  if (paper.pdf_filename) {
+    scholarTags.citation_pdf_url = `${FILES_BASE}/${paper.pdf_filename}`;
+  }
+  if (paper.doi) {
+    scholarTags.citation_doi = paper.doi;
+  }
+
+  return {
+    title: paper.title,
+    description,
+    alternates: { canonical: canonicalUrl },
+    openGraph: {
+      title: paper.title,
+      description,
+      url: canonicalUrl,
+      siteName: SITE_NAME,
+      type: "article",
+      publishedTime: paper.created_at,
+      authors: publicAuthorNames(paper),
+    },
+    other: scholarTags,
+  };
+}
+
 export default async function PaperPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   let paper;
@@ -81,8 +142,24 @@ export default async function PaperPage({ params }: { params: Promise<{ id: stri
   });
   const submitterName = paper.submitter_name ?? null;
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ScholarlyArticle",
+    headline: paper.title,
+    abstract: paper.abstract,
+    author: publicAuthorNames(paper).map((name) => ({ "@type": "Person", name })),
+    datePublished: paper.created_at,
+    url: `${SITE_URL}/papers/${paper.id}`,
+    ...(paper.doi ? { sameAs: `https://doi.org/${paper.doi}` } : {}),
+    publisher: { "@type": "Organization", name: SITE_NAME, url: SITE_URL },
+  };
+
   return (
     <div className="max-w-3xl">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
+      />
       <div className="flex items-center gap-3 mb-4 text-sm text-gray-500">
         <Link href="/" className="hover:text-gray-900 transition-colors">← All papers</Link>
         <span className="text-gray-300">|</span>

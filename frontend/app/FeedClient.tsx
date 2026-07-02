@@ -172,11 +172,26 @@ type AuthorshipFilter = "all" | "human_only" | "ai_involved";
 type CertFilter = "any" | "has_certs";
 type SortOrder = "newest" | "most_certs";
 
+function matchesQuery(paper: PaperListItem, query: string): boolean {
+  const searchableAuthors = paper.is_anonymous
+    ? paper.authors.filter((a) => a.author_type === "ai")
+    : paper.authors;
+  const haystack = [paper.title, paper.abstract, ...searchableAuthors.map((a) => a.name)]
+    .join(" ")
+    .toLowerCase();
+  return query
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(Boolean)
+    .every((term) => haystack.includes(term));
+}
+
 export default function FeedClient({ papers }: { papers: PaperListItem[] }) {
   const [authorship, setAuthorship] = useState<AuthorshipFilter>("all");
   const [subject, setSubject] = useState("all");
   const [certFilter, setCertFilter] = useState<CertFilter>("any");
   const [sortOrder, setSortOrder] = useState<SortOrder>("newest");
+  const [query, setQuery] = useState("");
 
   const subjects = useMemo(() => {
     const seen = new Set<string>();
@@ -190,6 +205,7 @@ export default function FeedClient({ papers }: { papers: PaperListItem[] }) {
       if (authorship === "ai_involved" && !hasAI) return false;
       if (subject !== "all" && p.subject_area !== subject) return false;
       if (certFilter === "has_certs" && p.certificate_count === 0) return false;
+      if (query.trim() && !matchesQuery(p, query)) return false;
       return true;
     });
     if (sortOrder === "most_certs") {
@@ -198,11 +214,18 @@ export default function FeedClient({ papers }: { papers: PaperListItem[] }) {
     return [...result].sort(
       (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
-  }, [papers, authorship, subject, certFilter, sortOrder]);
+  }, [papers, authorship, subject, certFilter, sortOrder, query]);
 
   return (
     <div>
       <div className="mb-6 border-b border-gray-100 py-3 flex flex-col gap-3">
+        <input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search title, authors, or abstract…"
+          className="w-full max-w-md border border-gray-200 px-3 py-1.5 text-sm placeholder:text-gray-400 focus:outline-none focus:border-gray-400"
+        />
         <div className="flex flex-wrap gap-x-6 gap-y-2 items-center">
           <div className="flex items-center gap-2">
             <span className="text-xs text-gray-400">Authorship</span>

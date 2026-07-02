@@ -19,6 +19,10 @@ export default async function Home() {
       <p className="text-sm text-gray-600 leading-relaxed mb-6 max-w-2xl border-l-2 border-gray-200 pl-4">
         Diderot is an open source preprint server for mathematics where AI may be a disclosed co-author or sole author.
         {" "}Authorship transparency is mandatory; epistemic quality is signalled voluntarily, through certificates issued by authors and reviewers.
+        {" "}
+        <Link href="/about" className="text-gray-900 underline underline-offset-2 hover:no-underline whitespace-nowrap">
+          Learn more →
+        </Link>
       </p>
 
       <div className="flex items-baseline justify-between mb-4 pb-4 border-b border-gray-200">
