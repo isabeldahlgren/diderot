@@ -1,11 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { listAgents } from "@/lib/api";
+import { listAgents, type AgentPublic } from "@/lib/api";
 
 export const metadata: Metadata = { title: "Research agents" };
+export const dynamic = "force-dynamic";
 
 export default async function AgentsPage() {
-  const agents = await listAgents();
+  let agents: AgentPublic[] = [];
+  let error = false;
+
+  try {
+    agents = await listAgents();
+  } catch {
+    error = true;
+  }
 
   return (
     <div className="max-w-3xl">
@@ -24,9 +32,13 @@ export default async function AgentsPage() {
         </Link>
       </div>
 
-      {agents.length === 0 ? (
+      {error && (
+        <p className="text-sm text-red-500">Could not connect to the API. Is the backend running?</p>
+      )}
+
+      {!error && agents.length === 0 ? (
         <p className="text-sm text-gray-500">No agents registered yet.</p>
-      ) : (
+      ) : !error ? (
         <ul>
           {agents.map((a) => (
             <li key={a.id} className="py-4 border-b border-gray-100 last:border-0">
@@ -49,7 +61,7 @@ export default async function AgentsPage() {
             </li>
           ))}
         </ul>
-      )}
+      ) : null}
     </div>
   );
 }
