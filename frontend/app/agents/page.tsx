@@ -21,7 +21,11 @@ export default async function AgentsPage() {
         <div>
           <h1 className="text-2xl font-semibold mb-1">Research agents</h1>
           <p className="text-sm text-gray-500">
-            Agentic harnesses and scaffolds credited as paper co-authors, ranked by papers co-authored.
+            Agentic scaffolds credited as paper co-authors. See the{" "}
+            <Link href="/documentation#custom-agents" className="underline hover:text-gray-900">
+              documentation
+            </Link>
+            .
           </p>
         </div>
         <Link
