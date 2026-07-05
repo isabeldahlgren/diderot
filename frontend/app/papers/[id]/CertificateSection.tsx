@@ -219,6 +219,9 @@ function FormalVerificationPayloadView({ payload }: { payload: Record<string, un
       {!!payload.statement_check_attested && (
         <FieldRow label="Statement check" value="Issuer attests that Challenge.lean correctly formalizes the paper's statements with reasonable imports" />
       )}
+      {!!payload.argument_check_attested && (
+        <FieldRow label="Argument check" value="Issuer attests that the formalization roughly follows the argument in the paper" />
+      )}
       {!!payload.notes && <FieldRow label="Imports justification" value={<LatexText text={payload.notes as string} />} />}
     </div>
   );
@@ -562,6 +565,7 @@ interface FormalVerificationState {
   formalization_repo_url: string;
   comparator_repo_url: string;
   statement_check_attested: boolean;
+  argument_check_attested: boolean;
   notes: string;
 }
 
@@ -612,6 +616,16 @@ function FormalVerificationForm({
         >
           <span className={`mt-0.5 w-3 h-3 flex-shrink-0 border flex items-center justify-center text-[7px] leading-none ${state.statement_check_attested ? "border-gray-900 bg-gray-900 text-white" : "border-gray-400 text-transparent"}`}>✓</span>
           <span className="text-gray-700">I attest that the <code>Challenge.lean</code> file in the comparator repo correctly formalizes the corresponding statement(s) from the paper and has reasonable imports <span className="text-red-500">*</span></span>
+        </button>
+      </div>
+      <div>
+        <button
+          type="button"
+          onClick={() => onChange({ ...state, argument_check_attested: !state.argument_check_attested })}
+          className="flex items-start gap-1.5 text-xs cursor-pointer select-none text-left"
+        >
+          <span className={`mt-0.5 w-3 h-3 flex-shrink-0 border flex items-center justify-center text-[7px] leading-none ${state.argument_check_attested ? "border-gray-900 bg-gray-900 text-white" : "border-gray-400 text-transparent"}`}>✓</span>
+          <span className="text-gray-700">I attest that the formalization roughly follows the argument in the paper, rather than proving the statement a different way that silently closes a gap the paper leaves open <span className="text-red-500">*</span></span>
         </button>
       </div>
       <div>
@@ -710,6 +724,7 @@ export function CertificateModal({
     formalization_repo_url: "",
     comparator_repo_url: "",
     statement_check_attested: false,
+    argument_check_attested: false,
     notes: "",
   });
   const [citationCheck, setCitationCheck] = useState<CitationCheckState>({
@@ -756,6 +771,7 @@ export function CertificateModal({
           formalization_repo_url: formalVerification.formalization_repo_url,
           comparator_repo_url: formalVerification.comparator_repo_url,
           statement_check_attested: formalVerification.statement_check_attested,
+          argument_check_attested: formalVerification.argument_check_attested,
           ...(formalVerification.notes && { notes: formalVerification.notes }),
         };
       case "citation_check":
@@ -771,6 +787,10 @@ export function CertificateModal({
     setError("");
     if (certType === "formal_verification" && !formalVerification.statement_check_attested) {
       setError("You must attest to checking the Challenge.lean statement.");
+      return;
+    }
+    if (certType === "formal_verification" && !formalVerification.argument_check_attested) {
+      setError("You must attest that the formalization follows the paper's argument.");
       return;
     }
     setSubmitting(true);
