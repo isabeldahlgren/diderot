@@ -19,7 +19,7 @@ A Formal Verification certificate has three parts:
 
 - **Formalization repo** — a public repository with the formalized proof. If autoformalized, include a `formalization.yaml` following the [mathlib-initiative schema](https://github.com/mathlib-initiative/formalization.yaml).
 - **Comparator repo** — a public repository with the [comparator](https://github.com/leanprover/comparator) verification.
-- **Human attestation** — the issuer attests that the `Challenge.lean` file correctly formalizes the paper's statement(s) and has reasonable imports.
+- **Human attestation** — the issuer attests to two things: that the `Challenge.lean` file correctly formalizes the paper's statement(s) with reasonable imports (statement faithfulness), and that the formalization roughly follows the argument in the paper rather than proving the statement a different way that silently closes a gap the paper leaves open (argument faithfulness).
 
 `Challenge.lean` should import only Mathlib, or a small set of approved repositories; any other import must be justified in the Notes field, otherwise auditors cannot tell what was actually verified. For an example, see Kim Morrison's [formalization repo](https://github.com/kim-em/erdos-unit-distance) and [comparator repo](https://github.com/kim-em/erdos-unit-distance-comparator) for the disproof of the Erdős unit-distance conjecture.
 
